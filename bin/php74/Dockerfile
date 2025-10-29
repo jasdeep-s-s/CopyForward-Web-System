@@ -1,90 +1,55 @@
-FROM php:7.4.2-apache-buster
+FROM ubuntu:22.04
 
-# Surpresses debconf complaints of trying to install apt packages interactively
-# https://github.com/moby/moby/issues/4032#issuecomment-192327844
- 
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Update
-RUN apt-get -y update --fix-missing && \
-    apt-get upgrade -y && \
-    apt-get --no-install-recommends install -y apt-utils && \
+# Update and install necessary packages, including PHP 7.4, Apache, and extensions
+RUN apt-get update && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository ppa:ondrej/php -y && \
+    apt-get update && \
+    apt-get install -y apache2 \
+    php7.4 \
+    php7.4-cli \
+    php7.4-common \
+    php7.4-mysql \
+    php7.4-sqlite3 \
+    php7.4-bcmath \
+    php7.4-gd \
+    php7.4-curl \
+    php7.4-intl \
+    php7.4-mbstring \
+    php7.4-xml \
+    php7.4-zip \
+    php7.4-json \
+    php7.4-readline \
+    php7.4-tokenizer \
+    php7.4-calendar \
+    php7.4-exif \
+    php7.4-gettext \
+    php7.4-redis \
+    php-pear \
+    php-imagick \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libmagickwand-dev \
+    libicu-dev \
+    nano wget dialog build-essential git curl iputils-ping zlib1g-dev libzip-dev libonig-dev libcurl4 libcurl4-openssl-dev zip openssl && \
     rm -rf /var/lib/apt/lists/*
 
+# Enable Apache modules
+RUN a2enmod rewrite headers ssl
 
-# Install useful tools and install important libaries
-RUN apt-get -y update && \
-    apt-get -y --no-install-recommends install nano wget \
-dialog \
-libsqlite3-dev \
-libsqlite3-0 && \
-    apt-get -y --no-install-recommends install default-mysql-client \
-zlib1g-dev \
-libzip-dev \
-libicu-dev && \
-    apt-get -y --no-install-recommends install --fix-missing apt-utils \
-build-essential \
-git \
-curl \
-libonig-dev && \ 
-    apt-get install -y iputils-ping && \
-    apt-get -y --no-install-recommends install --fix-missing libcurl4 \
-libcurl4-openssl-dev \
-zip \
-openssl && \
-    rm -rf /var/lib/apt/lists/* && \
-    curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Enable Freetype, JPEG and PNG support for GD in PHP
+RUN phpenmod gd
 
-# Install xdebug
-RUN pecl install xdebug-3.1.4 && \
-    docker-php-ext-enable xdebug && \
-    mkdir /var/log/xdebug
-
-# Install redis
-RUN pecl install redis-5.1.1 && \
-    docker-php-ext-enable redis
-
-# Install imagick
-RUN apt-get update && \
-    apt-get -y --no-install-recommends install --fix-missing libmagickwand-dev && \
-    rm -rf /var/lib/apt/lists/* && \
-    pecl install imagick && \
-    docker-php-ext-enable imagick
-
-# Other PHP7 Extensions
-
-RUN docker-php-ext-install pdo_mysql && \
-    docker-php-ext-install pdo_sqlite && \
-    docker-php-ext-install bcmath && \
-    docker-php-ext-install mysqli && \
-    docker-php-ext-install curl && \
-    docker-php-ext-install tokenizer && \
-    docker-php-ext-install json && \
-    docker-php-ext-install zip && \
-    docker-php-ext-install -j$(nproc) intl && \
-    docker-php-ext-install mbstring && \
-    docker-php-ext-install gettext && \
-    docker-php-ext-install calendar && \
-    docker-php-ext-install exif
-
-
-# Install Freetype 
-RUN apt-get -y update && \
-    apt-get --no-install-recommends install -y libfreetype6-dev \
-libjpeg62-turbo-dev \
-libpng-dev && \
-    rm -rf /var/lib/apt/lists/* && \
-    docker-php-ext-configure gd --enable-gd --with-freetype --with-jpeg && \
-    docker-php-ext-install gd
+# Download and install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Insure an SSL directory exists
 RUN mkdir -p /etc/apache2/ssl
 
-# Enable SSL support
-RUN a2enmod ssl && a2enmod rewrite
+# Set Apache to run in foreground by default
+CMD ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
 
-# Enable apache modules
-RUN a2enmod rewrite headers
-
-# Cleanup
-RUN rm -rf /usr/src/*
+EXPOSE 80 443
