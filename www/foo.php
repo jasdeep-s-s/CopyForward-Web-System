@@ -5,8 +5,8 @@
 <BODY>
 <H1>Date/Time Functions Demo</H1>
 <P>The current date and time is
-<EM><?echo date("D M d, Y H:i:s", time())?></EM>
+<EM><?php echo date("D M d, Y H:i:s", time()) ?></EM>
 <P>Current PHP version:
-<EM><?echo  phpversion()?></EM>
+<EM><?php echo phpversion() ?></EM>
 </BODY>
 </HTML>
