@@ -5,6 +5,14 @@ import './App.css'
 
 function App() {
   const [count, setCount] = useState(0)
+    const [phpOutput, setPhpOutput] = useState("");
+
+  const runPhp = async () => {
+    const res = await fetch("/foo.php");
+    const text = await res.text();
+    setPhpOutput(text);
+  };
+
 
   return (
     <>
@@ -16,7 +24,11 @@ function App() {
           <img src={reactLogo} className="logo react" alt="React logo" />
         </a>
       </div>
-      <h1>Vite + React</h1>
+      <h1>Poopoo Caca</h1>
+      <button onClick={runPhp}>Run PHP</button>
+      <p>{phpOutput}</p>
+
+
       <div className="card">
         <button onClick={() => setCount((count) => count + 1)}>
           count is {count}
