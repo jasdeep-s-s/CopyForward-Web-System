@@ -2,6 +2,9 @@
 
 services:
   webserver:              # LAMP Webserver container init
+    platform: linux/amd64     # for Intel/AMD processors
+    # or
+    # platform: linux/arm64   # for apple silicon or RPi
     build:
       context: ./bin/${PHPVERSION}            # build from selected image
     container_name: "${COMPOSE_PROJECT_NAME}-${PHPVERSION}"
