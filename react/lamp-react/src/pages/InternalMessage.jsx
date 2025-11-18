@@ -45,7 +45,6 @@ function InternalMessage() {
         );
         const data = await res.json();
         if (data.success && data.memberId) {
-          localStorage.setItem("logged_in_id", data.memberId);
           setMemberId(data.memberId);
         }
       };
