@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
+import Header from './Header'
+import MessagePopup from './pages/MessagePopup'
+import InternalMessage from './pages/InternalMessage'
 
 function App() {
-  const [count, setCount] = useState(0)
-    const [phpOutput, setPhpOutput] = useState("");
+  const [phpOutput, setPhpOutput] = useState("");
+  const [showMailPopup, setShowMailPopup] = useState(false);
 
   const runPhp = async () => {
     const res = await fetch("/foo.php");
@@ -15,32 +16,21 @@ function App() {
 
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>  
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Poopoo Caca</h1>
-      <button onClick={runPhp}>Run PHP</button>
-      <p>{phpOutput}</p>
+    <div className="app">
+      <Header onMailClick={() => setShowMailPopup(true)} />
 
+      {showMailPopup && (
+        <MessagePopup onClose={() => setShowMailPopup(false)}>
+          <InternalMessage />
+        </MessagePopup>
+      )}
 
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+      <main className="app-main">
+        <h1>Poopoo Caca</h1>
+        <button onClick={runPhp}>Run PHP</button>
+        <p>{phpOutput}</p>
+      </main>
+    </div>
   )
 }
 
