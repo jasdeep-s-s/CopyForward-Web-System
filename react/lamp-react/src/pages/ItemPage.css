@@ -55,6 +55,9 @@
 .comment-text { color: #333; }
 .empty { color: #777; font-style: italic; }
 
+.comment-date { color: #666; font-size: 0.9em; margin-bottom: 6px; }
+.comment-reply { margin-left: 18px; background: #fafafa; padding: 8px; border-radius: 4px; }
+
 @media (max-width: 600px) {
   .item-page { padding: 12px; }
   .item-actions { flex-direction: column; }

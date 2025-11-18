@@ -4,6 +4,8 @@ import './ItemPage.css'
 function ItemPage ({ itemId }) {
 	const [item, setItem] = useState(null)
 	const [commentText, setCommentText] = useState('')
+	const [replyToId, setReplyToId] = useState(null)
+	const [replyToAuthor, setReplyToAuthor] = useState('')
 
 	useEffect(() => {
 		let cancelled = false
@@ -52,6 +54,16 @@ function ItemPage ({ itemId }) {
 					// leave versions empty
 				}
 
+				try {
+					const cRes = await fetch(`/comments.php?item=${encodeURIComponent(itemId)}`)
+					if (cRes.ok) {
+						const comments = await cRes.json()
+						itemData.comments = (comments || []).map(c => ({ id: c.CommentID, author: c.CommentorName || 'Unknown', text: c.Comment, date: c.Date, parentId: c.ParentCommentID }))
+					}
+				} catch {
+					// leave comments empty
+				}
+
 				if (!cancelled) setItem(itemData)
 			} catch (err) {
 				console.error('Item fetch error:', err)
@@ -62,9 +74,50 @@ function ItemPage ({ itemId }) {
 		return () => { cancelled = true }
 	}, [itemId])
 
-	function submitComment () {
-		// todo
-        null;
+	function submitComment (e) {
+		e.preventDefault()
+		const text = commentText.trim()
+		if (!text) return
+
+		// require logged_in_id in localStorage
+		const loggedId = localStorage.getItem('logged_in_id')
+		if (!loggedId) {
+			alert('You must be signed in to post comments.')
+			return
+		}
+
+		const payload = {
+			itemId: itemId,
+			commentorId: parseInt(loggedId, 10),
+			comment: text
+		}
+		if (replyToId) payload.parentId = replyToId
+
+		fetch('/post_comment.php', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(payload)
+		})
+		.then(r => r.json())
+		.then(data => {
+			if (data && data.success) {
+				fetch(`/comments.php?item=${encodeURIComponent(itemId)}`)
+					.then(r => r.json())
+					.then(newComments => {
+						setItem(prev => ({ ...prev, comments: (newComments || []).map(c => ({ id: c.CommentID, author: c.CommentorName || 'Unknown', text: c.Comment, date: c.Date, parentId: c.ParentCommentID })) }))
+					})
+					.catch(() => {})
+				setCommentText('')
+				setReplyToId(null)
+				setReplyToAuthor('')
+			} else {
+				alert('Failed to post comment')
+			}
+		})
+		.catch(err => {
+			console.error('post comment error', err)
+			alert('Network error while posting comment')
+		})
 	}
 
 	if (!item) return <div className="item-page">Loading...</div>
@@ -120,6 +173,12 @@ function ItemPage ({ itemId }) {
 			<section className="comments">
 				<h2>Comments</h2>
 				<form className="comment-form" onSubmit={submitComment}>
+					{replyToId ? (
+						<div style={{ marginBottom: 8 }}>
+							<strong>Replying to:</strong> {replyToAuthor}
+							<button type="button" style={{ marginLeft: 8 }} onClick={() => { setReplyToId(null); setReplyToAuthor('') }}>Cancel</button>
+						</div>
+					) : null}
 					<textarea
 						value={commentText}
 						onChange={e => setCommentText(e.target.value)}
@@ -132,16 +191,44 @@ function ItemPage ({ itemId }) {
 				</form>
 
 				<div className="comments-list">
-					{(item.comments || []).length ? (
-						(item.comments || []).map(c => (
-							<div className="comment" key={c.id}>
-								<div className="comment-author">{c.author}</div>
-								<div className="comment-text">{c.text}</div>
-							</div>
-						))
-					) : (
-						<div className="empty">No comments yet</div>
-					)}
+						{(item.comments || []).length ? (
+							(() => {
+								const byParent = {};
+								const top = [];
+								for (const c of (item.comments || [])) {
+									const pid = c.parentId ? Number(c.parentId) : 0;
+									if (pid === 0) top.push(c);
+									else {
+										if (!byParent[pid]) byParent[pid] = [];
+										byParent[pid].push(c);
+									}
+								}
+								top.sort((a,b)=> new Date(a.date) - new Date(b.date));
+								return top.map(parent => (
+									<div key={parent.id}>
+										<div className="comment">
+											<div className="comment-author">{parent.author}</div>
+											<div className="comment-date">{parent.date}</div>
+											<div className="comment-text">{parent.text}</div>
+											<div style={{ marginTop: 6 }}>
+												<button type="button" className="btn" onClick={() => { setReplyToId(parent.id); setReplyToAuthor(parent.author); }}>
+													Reply
+												</button>
+											</div>
+										</div>
+										{(byParent[parent.id] || []).map(r => (
+											<div className="comment comment-reply" key={r.id}>
+												<div className="comment-author">{r.author}</div>
+												<div className="comment-date">{r.date}</div>
+												<div className="comment-text">{r.text}</div>
+											</div>
+										))}
+									</div>
+								));
+							})()
+						) : (
+							<div className="empty">No comments yet</div>
+						)}
 				</div>
 			</section>
 		</div>
