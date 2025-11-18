@@ -7,6 +7,8 @@ function ItemPage ({ itemId }) {
 	const [replyToId, setReplyToId] = useState(null)
 	const [replyToAuthor, setReplyToAuthor] = useState('')
 	const [privateReply, setPrivateReply] = useState(false)
+	const [canDownload, setCanDownload] = useState(null)
+	const [downloadInfo, setDownloadInfo] = useState(null)
 
 	useEffect(() => {
 		let cancelled = false
@@ -63,6 +65,22 @@ function ItemPage ({ itemId }) {
 					if (cRes.ok) {
 						const comments = await cRes.json()
 						itemData.comments = (comments || []).map(c => ({ id: c.CommentID, author: c.CommentorName || 'Unknown', text: c.Comment, date: c.Date, parentId: c.ParentCommentID, private: !!c.private, commentorId: c.CommentorID }))
+					}
+
+					if (logged) {
+						try {
+							const dRes = await fetch(`/can_download.php?member=${encodeURIComponent(logged)}`)
+							if (dRes.ok) {
+								const dData = await dRes.json()
+								setCanDownload(!!dData.allowed)
+								setDownloadInfo(dData)
+							}
+							} catch {
+							// ignore
+						}
+					} else {
+						setCanDownload(null)
+						setDownloadInfo(null)
 					}
 				} catch {
 					// leave comments empty
@@ -128,6 +146,33 @@ function ItemPage ({ itemId }) {
 		})
 	}
 
+	function handleDownload() {
+		const logged = localStorage.getItem('logged_in_id')
+		if (!logged) {
+			alert('You must be signed in to download files.')
+			return
+		}
+		if (canDownload === false) {
+			const days = downloadInfo && downloadInfo.window_days ? downloadInfo.window_days : 7
+			alert(`Downloads are limited: one download per ${days} day(s).`)
+			return
+		}
+
+		fetch(`/download_item.php?item=${encodeURIComponent(item.id)}&member=${encodeURIComponent(logged)}&preview=1`)
+			.then(r => r.json())
+			.then(d => {
+				if (d && d.allowed) {
+					window.location.href = `/download_item.php?item=${encodeURIComponent(item.id)}&member=${encodeURIComponent(logged)}`
+				} else {
+					alert('You are not allowed to download right now.')
+				}
+			})
+			.catch(err => {
+				console.error('download preview error', err)
+				alert('Network error while checking download eligibility')
+			})
+	}
+
 	if (!item) return <div className="item-page">Loading...</div>
 
 	return (
@@ -146,7 +191,16 @@ function ItemPage ({ itemId }) {
 
 			<div className="item-actions">
 				<button className="btn donate">Donate</button>
-				<button className="btn download">Download</button>
+				{localStorage.getItem('logged_in_id') ? (
+					<button
+						className="btn download"
+						onClick={handleDownload}
+						disabled={canDownload === false}
+						title={canDownload === false && downloadInfo ? `Download allowed once every ${downloadInfo.window_days} day(s).` : 'Download'}
+					>
+						Download
+					</button>
+				) : null}
 				<button className="btn report">Report</button>
 			</div>
 
