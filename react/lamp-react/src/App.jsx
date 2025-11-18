@@ -1,19 +1,23 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 import Header from './Header'
 import MessagePopup from './pages/MessagePopup'
 import InternalMessage from './pages/InternalMessage'
+import ItemPage from './pages/ItemPage'
 
 function App() {
-  const [phpOutput, setPhpOutput] = useState("");
   const [showMailPopup, setShowMailPopup] = useState(false);
 
-  const runPhp = async () => {
-    const res = await fetch("/foo.php");
-    const text = await res.text();
-    setPhpOutput(text);
-  };
+  const getPath = () => (window.location.hash ? window.location.hash.slice(1) : window.location.pathname)
+  const [path, setPath] = useState(() => getPath())
 
+  useEffect(() => {
+    const onHash = () => setPath(getPath())
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+
+  const itemMatch = path.match(/^\/items\/(.+)$/)
 
   return (
     <div className="app">
@@ -26,9 +30,11 @@ function App() {
       )}
 
       <main className="app-main">
-        <h1>Poopoo Caca</h1>
-        <button onClick={runPhp}>Run PHP</button>
-        <p>{phpOutput}</p>
+        {itemMatch ? (
+          <ItemPage itemId={itemMatch[1]} />
+        ) : (
+          null
+        )}
       </main>
     </div>
   )
