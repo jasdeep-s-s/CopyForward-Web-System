@@ -26,11 +26,11 @@ if ($item <= 0) {
     exit;
 }
 
-$sql = "SELECT c.CommentID, m.Name AS CommentorName, c.Comment, c.Date, c.ParentCommentID
-        FROM Comment c
-        LEFT JOIN Member m ON c.CommentorID = m.MemberID
-        WHERE c.ItemID = ?
-        ORDER BY c.Date ASC";
+$sql = "SELECT c.CommentID, m.Name AS CommentorName, c.Comment, c.Date, c.ParentCommentID, c.CommentorID, c.private
+    FROM Comment c
+    LEFT JOIN Member m ON c.CommentorID = m.MemberID
+    WHERE c.ItemID = ?
+    ORDER BY c.Date ASC";
 
 $stmt = $mysqli->prepare($sql);
 if (!$stmt) {
@@ -50,9 +50,41 @@ if (!$stmt->execute()) {
 $res = $stmt->get_result();
 $rows = [];
 while ($r = $res->fetch_assoc()) {
+    $r['CommentID'] = isset($r['CommentID']) ? intval($r['CommentID']) : 0;
+    $r['ParentCommentID'] = isset($r['ParentCommentID']) ? intval($r['ParentCommentID']) : 0;
+    $r['CommentorID'] = isset($r['CommentorID']) ? intval($r['CommentorID']) : 0;
+    $r['private'] = isset($r['private']) ? (bool)$r['private'] : false;
     $rows[] = $r;
 }
 $stmt->close();
 
-echo json_encode($rows);
+$viewer = isset($_GET['viewer']) ? intval($_GET['viewer']) : 0;
+
+if ($viewer > 0) {
+    $commentorMap = [];
+    foreach ($rows as $r) {
+        $commentorMap[$r['CommentID']] = $r['CommentorID'];
+    }
+
+    $filtered = [];
+    foreach ($rows as $r) {
+        if (!$r['private']) {
+            $filtered[] = $r;
+            continue;
+        }
+        
+        if ($viewer === $r['CommentorID']) {
+            $filtered[] = $r;
+            continue;
+        }
+        if ($r['ParentCommentID'] && isset($commentorMap[$r['ParentCommentID']]) && $viewer === $commentorMap[$r['ParentCommentID']]) {
+            $filtered[] = $r;
+            continue;
+        }
+    }
+    echo json_encode($filtered);
+} else {
+    $publicOnly = array_filter($rows, function($r){ return !$r['private']; });
+    echo json_encode(array_values($publicOnly));
+}
 $mysqli->close();

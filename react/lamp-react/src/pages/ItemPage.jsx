@@ -6,6 +6,7 @@ function ItemPage ({ itemId }) {
 	const [commentText, setCommentText] = useState('')
 	const [replyToId, setReplyToId] = useState(null)
 	const [replyToAuthor, setReplyToAuthor] = useState('')
+	const [privateReply, setPrivateReply] = useState(false)
 
 	useEffect(() => {
 		let cancelled = false
@@ -20,6 +21,7 @@ function ItemPage ({ itemId }) {
 					id: itemId,
 					title: data.Title,
 					author: data.Name,
+					authorMemberId: data.AuthorMemberID || null,
 					publicationDate: data.PublicationDate,
 					uploadDate: data.UploadDate,
 					updateDate: data.UpdateDate || data.UpdatedAt,
@@ -55,10 +57,12 @@ function ItemPage ({ itemId }) {
 				}
 
 				try {
-					const cRes = await fetch(`/comments.php?item=${encodeURIComponent(itemId)}`)
+					const logged = localStorage.getItem('logged_in_id')
+					const viewerQuery = logged ? `&viewer=${encodeURIComponent(logged)}` : ''
+					const cRes = await fetch(`/comments.php?item=${encodeURIComponent(itemId)}${viewerQuery}`)
 					if (cRes.ok) {
 						const comments = await cRes.json()
-						itemData.comments = (comments || []).map(c => ({ id: c.CommentID, author: c.CommentorName || 'Unknown', text: c.Comment, date: c.Date, parentId: c.ParentCommentID }))
+						itemData.comments = (comments || []).map(c => ({ id: c.CommentID, author: c.CommentorName || 'Unknown', text: c.Comment, date: c.Date, parentId: c.ParentCommentID, private: !!c.private, commentorId: c.CommentorID }))
 					}
 				} catch {
 					// leave comments empty
@@ -92,6 +96,7 @@ function ItemPage ({ itemId }) {
 			comment: text
 		}
 		if (replyToId) payload.parentId = replyToId
+		if (replyToId && privateReply) payload.private = true
 
 		fetch('/post_comment.php', {
 			method: 'POST',
@@ -101,15 +106,18 @@ function ItemPage ({ itemId }) {
 		.then(r => r.json())
 		.then(data => {
 			if (data && data.success) {
-				fetch(`/comments.php?item=${encodeURIComponent(itemId)}`)
+				const loggedAfter = localStorage.getItem('logged_in_id')
+				const viewerQueryAfter = loggedAfter ? `&viewer=${encodeURIComponent(loggedAfter)}` : ''
+				fetch(`/comments.php?item=${encodeURIComponent(itemId)}${viewerQueryAfter}`)
 					.then(r => r.json())
 					.then(newComments => {
-						setItem(prev => ({ ...prev, comments: (newComments || []).map(c => ({ id: c.CommentID, author: c.CommentorName || 'Unknown', text: c.Comment, date: c.Date, parentId: c.ParentCommentID })) }))
+						setItem(prev => ({ ...prev, comments: (newComments || []).map(c => ({ id: c.CommentID, author: c.CommentorName || 'Unknown', text: c.Comment, date: c.Date, parentId: c.ParentCommentID, private: !!c.private, commentorId: c.CommentorID })) }))
 					})
 					.catch(() => {})
-				setCommentText('')
-				setReplyToId(null)
-				setReplyToAuthor('')
+					setCommentText('')
+					setReplyToId(null)
+					setReplyToAuthor('')
+					setPrivateReply(false)
 			} else {
 				alert('Failed to post comment')
 			}
@@ -176,7 +184,14 @@ function ItemPage ({ itemId }) {
 					{replyToId ? (
 						<div style={{ marginBottom: 8 }}>
 							<strong>Replying to:</strong> {replyToAuthor}
-							<button type="button" style={{ marginLeft: 8 }} onClick={() => { setReplyToId(null); setReplyToAuthor('') }}>Cancel</button>
+							<button type="button" style={{ marginLeft: 8 }} onClick={() => { setReplyToId(null); setReplyToAuthor(''); setPrivateReply(false) }}>Cancel</button>
+						</div>
+					) : null}
+					{replyToId && item && item.authorMemberId && Number(localStorage.getItem('logged_in_id')) === Number(item.authorMemberId) ? (
+						<div style={{ marginBottom: 8 }}>
+							<label style={{ fontSize: '0.9rem' }}>
+								<input type="checkbox" checked={privateReply} onChange={e => setPrivateReply(e.target.checked)} /> Private reply
+							</label>
 						</div>
 					) : null}
 					<textarea
@@ -207,18 +222,20 @@ function ItemPage ({ itemId }) {
 								return top.map(parent => (
 									<div key={parent.id}>
 										<div className="comment">
-											<div className="comment-author">{parent.author}</div>
+											<div className="comment-author">{parent.author}{parent.private ? <span className="private-label"> (Private)</span> : null}</div>
 											<div className="comment-date">{parent.date}</div>
 											<div className="comment-text">{parent.text}</div>
 											<div style={{ marginTop: 6 }}>
-												<button type="button" className="btn" onClick={() => { setReplyToId(parent.id); setReplyToAuthor(parent.author); }}>
-													Reply
-												</button>
+												{ (localStorage.getItem('logged_in_id') && item.authorMemberId && Number(localStorage.getItem('logged_in_id')) === Number(item.authorMemberId)) ? (
+													<button type="button" className="btn" onClick={() => { setReplyToId(parent.id); setReplyToAuthor(parent.author); }}>
+														Reply
+													</button>
+												) : null }
 											</div>
 										</div>
 										{(byParent[parent.id] || []).map(r => (
 											<div className="comment comment-reply" key={r.id}>
-												<div className="comment-author">{r.author}</div>
+												<div className="comment-author">{r.author}{r.private ? <span className="private-label"> (Private)</span> : null}</div>
 												<div className="comment-date">{r.date}</div>
 												<div className="comment-text">{r.text}</div>
 											</div>

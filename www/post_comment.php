@@ -21,10 +21,12 @@ if ($mysqli->connect_errno) {
 $raw = file_get_contents('php://input');
 $data = json_decode($raw, true);
 
+
 $itemId = isset($data['itemId']) ? intval($data['itemId']) : 0;
 $commentorId = isset($data['commentorId']) ? intval($data['commentorId']) : 0;
 $comment = isset($data['comment']) ? trim($data['comment']) : '';
 $parentId = isset($data['parentId']) ? intval($data['parentId']) : 0;
+$private = isset($data['private']) ? (bool)$data['private'] : false;
 
 if ($itemId <= 0 || $commentorId <= 0 || $comment === '') {
     http_response_code(400);
@@ -36,15 +38,17 @@ if ($itemId <= 0 || $commentorId <= 0 || $comment === '') {
 $now = date('Y-m-d H:i:s');
 try {
     if ($parentId > 0) {
-        $sql = "INSERT INTO Comment (ItemID, CommentorID, Comment, Date, ParentCommentID) VALUES (?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO Comment (ItemID, CommentorID, Comment, Date, ParentCommentID, private) VALUES (?, ?, ?, ?, ?, ?)";
         $stmt = $mysqli->prepare($sql);
         if (!$stmt) throw new Exception($mysqli->error);
-        $stmt->bind_param('iissi', $itemId, $commentorId, $comment, $now, $parentId);
+        $privateInt = $private ? 1 : 0;
+        $stmt->bind_param('iissii', $itemId, $commentorId, $comment, $now, $parentId, $privateInt);
     } else {
-        $sql = "INSERT INTO Comment (ItemID, CommentorID, Comment, Date) VALUES (?, ?, ?, ?)";
+        $sql = "INSERT INTO Comment (ItemID, CommentorID, Comment, Date, private) VALUES (?, ?, ?, ?, ?)";
         $stmt = $mysqli->prepare($sql);
         if (!$stmt) throw new Exception($mysqli->error);
-        $stmt->bind_param('iiss', $itemId, $commentorId, $comment, $now);
+        $privateInt = $private ? 1 : 0;
+        $stmt->bind_param('iissi', $itemId, $commentorId, $comment, $now, $privateInt);
     }
 
     if (!$stmt->execute()) {
