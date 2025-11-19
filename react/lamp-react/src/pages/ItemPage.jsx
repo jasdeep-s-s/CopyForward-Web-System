@@ -190,7 +190,11 @@ function ItemPage ({ itemId }) {
 			</header>
 
 			<div className="item-actions">
-				<button className="btn donate">Donate</button>
+				{localStorage.getItem('logged_in_id') ? (
+					<button className="btn donate" onClick={() => { window.location.hash = `#/items/${item.id}/donate` }}>Donate</button>
+				) : (
+					<button className="btn donate" disabled title="Sign in to donate">Donate</button>
+				)}
 				{localStorage.getItem('logged_in_id') ? (
 					<button
 						className="btn download"
