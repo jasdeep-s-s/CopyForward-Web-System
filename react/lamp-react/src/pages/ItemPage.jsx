@@ -180,7 +180,16 @@ function ItemPage ({ itemId }) {
 			<header className="item-header">
 				<h1 className="item-title">{item.title}</h1>
 				<div className="item-meta">
-					<div><strong>Author:</strong> {item.author}</div>
+					<div>
+						<strong>Author: </strong>
+						{item.authorMemberId ? (
+							<a className="version-link" href={`#/member/${item.authorMemberId}`} onClick={e => { e.preventDefault(); window.location.hash = `#/member/${item.authorMemberId}` }}>
+								{item.author}
+							</a>
+						) : (
+							item.author
+						)}
+					</div>
 					<div><strong>Publication Date:</strong> {item.publicationDate}</div>
 					<div><strong>Upload Date:</strong> {item.uploadDate}</div>
 					<div><strong>Update Date:</strong> {item.updateDate}</div>
@@ -283,7 +292,20 @@ function ItemPage ({ itemId }) {
 								return top.map(parent => (
 									<div key={parent.id}>
 										<div className="comment">
-											<div className="comment-author">{parent.author}{parent.private ? <span className="private-label"> (Private)</span> : null}</div>
+											<div className="comment-author">
+												{parent.commentorId ? (
+													<a
+														className="version-link"
+														href={`#/member/${parent.commentorId}`}
+														onClick={e => { e.preventDefault(); window.location.hash = `#/member/${parent.commentorId}` }}
+													>
+														{parent.author}
+													</a>
+												) : (
+													parent.author
+												)}
+												{parent.private ? <span className="private-label"> (Private)</span> : null}
+											</div>
 											<div className="comment-date">{parent.date}</div>
 											<div className="comment-text">{parent.text}</div>
 											<div style={{ marginTop: 6 }}>
@@ -296,7 +318,20 @@ function ItemPage ({ itemId }) {
 										</div>
 										{(byParent[parent.id] || []).map(r => (
 											<div className="comment comment-reply" key={r.id}>
-												<div className="comment-author">{r.author}{r.private ? <span className="private-label"> (Private)</span> : null}</div>
+												<div className="comment-author">
+													{r.commentorId ? (
+														<a
+															className="version-link"
+															href={`#/member/${r.commentorId}`}
+															onClick={e => { e.preventDefault(); window.location.hash = `#/member/${r.commentorId}` }}
+														>
+															{r.author}
+														</a>
+													) : (
+														r.author
+													)}
+													{r.private ? <span className="private-label"> (Private)</span> : null}
+												</div>
 												<div className="comment-date">{r.date}</div>
 												<div className="comment-text">{r.text}</div>
 											</div>

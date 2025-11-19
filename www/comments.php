@@ -26,7 +26,7 @@ if ($item <= 0) {
     exit;
 }
 
-$sql = "SELECT c.CommentID, m.Name AS CommentorName, c.Comment, c.Date, c.ParentCommentID, c.CommentorID, c.private
+$sql = "SELECT c.CommentID, m.Username AS CommentorName, c.Comment, c.Date, c.ParentCommentID, c.CommentorID, c.private
     FROM Comment c
     LEFT JOIN Member m ON c.CommentorID = m.MemberID
     WHERE c.ItemID = ?

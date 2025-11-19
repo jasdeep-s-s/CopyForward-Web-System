@@ -25,7 +25,7 @@ if ($id <= 0) {
     exit;
 }
 
-$sql = "SELECT i.Title, a.Name, a.MemberID AS AuthorMemberID, i.PublicationDate, i.UploadDate, i.UpdatedAt AS UpdateDate, i.Topic, i.Status
+$sql = "SELECT i.Title, a.Username AS Name, a.MemberID AS AuthorMemberID, i.PublicationDate, i.UploadDate, i.UpdatedAt AS UpdateDate, i.Topic, i.Status
         FROM Item i
         LEFT JOIN Member a ON i.AuthorID = a.ORCID
         WHERE i.ItemID = ?
