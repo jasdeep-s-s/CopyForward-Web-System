@@ -12,6 +12,10 @@ function ItemDonation ({ itemId }) {
   const [loading, setLoading] = useState(false)
   const [itemTitle, setItemTitle] = useState('')
   const [authorName, setAuthorName] = useState('')
+  const [suggestMode, setSuggestMode] = useState(false)
+  const [suggestName, setSuggestName] = useState('')
+  const [suggestLoading, setSuggestLoading] = useState(false)
+  const [suggestMessage, setSuggestMessage] = useState('')
 
   useEffect(() => {
     fetch('/charities.php')
@@ -29,6 +33,33 @@ function ItemDonation ({ itemId }) {
       })
       .catch(() => {})
   }, [itemId])
+
+  function submitSuggestion(e) {
+    if (e && e.preventDefault) e.preventDefault()
+    const logged = localStorage.getItem('logged_in_id')
+    if (!logged) { setSuggestMessage('You must be signed in to suggest'); return }
+    if (!suggestName || !suggestName.trim()) { setSuggestMessage('Enter a charity name'); return }
+    setSuggestLoading(true)
+    setSuggestMessage('')
+    fetch('/suggest_charity.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: suggestName.trim(), suggestedBy: parseInt(logged,10) })
+    })
+    .then(r => r.json())
+    .then(d => {
+      setSuggestLoading(false)
+      if (d && d.success) {
+        setSuggestMessage('Suggestion submitted — awaiting approval')
+        setSuggestName('')
+        setSuggestMode(false)
+        fetch('/charities.php').then(r=>r.json()).then(data=>setCharities(data||[])).catch(()=>{})
+      } else {
+        setSuggestMessage(d && d.error ? d.error : 'Failed to submit suggestion')
+      }
+    })
+    .catch(() => { setSuggestLoading(false); setSuggestMessage('Network error') })
+  }
 
   function validate() {
     setError('')
@@ -85,6 +116,19 @@ function ItemDonation ({ itemId }) {
               {charities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </label>
+
+          <div style={{ marginTop: 8 }}>
+            {suggestMode ? (
+              <div style={{ display: 'inline-block', marginLeft: 8 }}>
+                <input placeholder="Charity name" value={suggestName} onChange={e => setSuggestName(e.target.value)} />
+                <button className="btn" type="button" onClick={submitSuggestion} disabled={suggestLoading} style={{ marginLeft: 6 }}>{suggestLoading ? 'Submitting...' : 'Suggest'}</button>
+                <button type="button" className="btn" style={{ marginLeft: 6 }} onClick={() => { setSuggestMode(false); setSuggestName(''); setSuggestMessage('') }}>Cancel</button>
+              </div>
+            ) : (
+              <button className="btn" type="button" style={{ marginLeft: 8 }} onClick={() => setSuggestMode(true)}>Suggest charity</button>
+            )}
+            {suggestMessage ? <div style={{ color: 'darkgreen', marginTop: 6 }}>{suggestMessage}</div> : null}
+          </div>
         </div>
 
         <div style={{ marginBottom: 8 }}>
