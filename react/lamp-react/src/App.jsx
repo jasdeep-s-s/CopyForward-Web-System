@@ -1,46 +1,56 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useState, useEffect } from 'react'
 import './App.css'
+import Header from './Header'
+import MessagePopup from './pages/MessagePopup'
+import InternalMessage from './pages/InternalMessage'
+import ItemPage from './pages/ItemPage'
+import ItemDiscussionPage from './pages/ItemDiscussionPage'
+import ItemDonationPage from './pages/ItemDonation'
+import MemberPage from './pages/MemberPage'
 
 function App() {
-  const [count, setCount] = useState(0)
-    const [phpOutput, setPhpOutput] = useState("");
+  const [showMailPopup, setShowMailPopup] = useState(false);
 
-  const runPhp = async () => {
-    const res = await fetch("/foo.php");
-    const text = await res.text();
-    setPhpOutput(text);
-  };
+  const getPath = () => (window.location.hash ? window.location.hash.slice(1) : window.location.pathname)
+  const [path, setPath] = useState(() => getPath())
 
+  useEffect(() => {
+    const onHash = () => setPath(getPath())
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+
+  const donationMatch = path.match(/^\/items\/([^\/]+)\/donate$/)
+  const discussionMatch = path.match(/^\/items\/([^\/]+)\/discussions$/)
+  const itemMatch = path.match(/^\/items\/([^\/]+)$/)
+  const messageMatch = path.match(/^\/message\/(.+)$/)
+  const memberMatch = path.match(/^\/member\/(\d+)$/)
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>  
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Poopoo Caca</h1>
-      <button onClick={runPhp}>Run PHP</button>
-      <p>{phpOutput}</p>
+    <div className="app">
+      <Header onMailClick={() => setShowMailPopup(true)} />
 
+      {(showMailPopup || messageMatch) && (
+        <MessagePopup onClose={() => {
+          setShowMailPopup(false)
+          if (messageMatch) window.location.hash = '#/'
+        }}>
+          <InternalMessage prefillTo={messageMatch ? decodeURIComponent(messageMatch[1]) : undefined} openCompose={!!messageMatch} />
+        </MessagePopup>
+      )}
 
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+      <main className="app-main">
+        {donationMatch ? (
+          <ItemDonationPage itemId={donationMatch[1]} />
+        ) : discussionMatch ? (
+          <ItemDiscussionPage itemId={discussionMatch[1]} />
+        ) : memberMatch ? (
+          <MemberPage memberId={memberMatch[1]} />
+        ) : itemMatch ? (
+          <ItemPage itemId={itemMatch[1]} />
+        ) : null}
+      </main>
+    </div>
   )
 }
 
