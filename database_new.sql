@@ -50,6 +50,7 @@ CREATE TABLE Comment (
   Comment VARCHAR(2048),
   Date DATETIME,
   ParentCommentID INT,
+  Private Bool,
   FOREIGN KEY (ItemID) REFERENCES Item(ItemID),
   FOREIGN KEY (CommentorID) REFERENCES Member(MemberID),
   FOREIGN KEY (ParentCommentID) REFERENCES Comment(CommentID)
