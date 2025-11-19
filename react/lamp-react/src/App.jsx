@@ -6,6 +6,7 @@ import InternalMessage from './pages/InternalMessage'
 import ItemPage from './pages/ItemPage'
 import ItemDiscussionPage from './pages/ItemDiscussionPage'
 import ItemDonationPage from './pages/ItemDonation'
+import MemberPage from './pages/MemberPage'
 
 function App() {
   const [showMailPopup, setShowMailPopup] = useState(false);
@@ -22,14 +23,19 @@ function App() {
   const donationMatch = path.match(/^\/items\/([^\/]+)\/donate$/)
   const discussionMatch = path.match(/^\/items\/([^\/]+)\/discussions$/)
   const itemMatch = path.match(/^\/items\/([^\/]+)$/)
+  const messageMatch = path.match(/^\/message\/(.+)$/)
+  const memberMatch = path.match(/^\/member\/(\d+)$/)
 
   return (
     <div className="app">
       <Header onMailClick={() => setShowMailPopup(true)} />
 
-      {showMailPopup && (
-        <MessagePopup onClose={() => setShowMailPopup(false)}>
-          <InternalMessage />
+      {(showMailPopup || messageMatch) && (
+        <MessagePopup onClose={() => {
+          setShowMailPopup(false)
+          if (messageMatch) window.location.hash = '#/'
+        }}>
+          <InternalMessage prefillTo={messageMatch ? decodeURIComponent(messageMatch[1]) : undefined} openCompose={!!messageMatch} />
         </MessagePopup>
       )}
 
@@ -38,6 +44,8 @@ function App() {
           <ItemDonationPage itemId={donationMatch[1]} />
         ) : discussionMatch ? (
           <ItemDiscussionPage itemId={discussionMatch[1]} />
+        ) : memberMatch ? (
+          <MemberPage memberId={memberMatch[1]} />
         ) : itemMatch ? (
           <ItemPage itemId={itemMatch[1]} />
         ) : null}

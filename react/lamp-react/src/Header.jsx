@@ -120,7 +120,7 @@ function Header({ onMailClick }) {
             <div style={{ position: 'absolute', top: '100%', right: 0, background: 'white', color: '#222', border: '1px solid #ccc', padding: 8, minWidth: 140, zIndex: 50 }}>
               {loggedIn ? (
                 <div>
-                  <div style={{ padding: 6, cursor: 'pointer' }} onClick={() => goHash('#/profile')}>Profile</div>
+                  <div style={{ padding: 6, cursor: 'pointer' }} onClick={() => { const id = localStorage.getItem('logged_in_id'); if (id) { goHash(`#/member/${id}`) } else { goHash('#/login') } }}>Profile</div>
                   <div style={{ padding: 6, cursor: 'pointer' }} onClick={() => { setShowRefBox(true); setRefMessage('') }}>Reference</div>
                   <div style={{ padding: 6, cursor: 'pointer' }} onClick={logout}>Logout</div>
                 </div>
