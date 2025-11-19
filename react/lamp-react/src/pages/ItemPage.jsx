@@ -201,6 +201,9 @@ function ItemPage ({ itemId }) {
 						Download
 					</button>
 				) : null}
+				{localStorage.getItem('logged_in_id') ? (
+					<button className="btn" onClick={() => { window.location.hash = `#/items/${item.id}/discussions` }}>Discussions</button>
+				) : null}
 				<button className="btn report">Report</button>
 			</div>
 

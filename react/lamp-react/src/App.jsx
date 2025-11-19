@@ -4,6 +4,8 @@ import Header from './Header'
 import MessagePopup from './pages/MessagePopup'
 import InternalMessage from './pages/InternalMessage'
 import ItemPage from './pages/ItemPage'
+import ItemDiscussionPage from './pages/ItemDiscussionPage'
+import ItemDonationPage from './pages/ItemDonation'
 
 function App() {
   const [showMailPopup, setShowMailPopup] = useState(false);
@@ -17,7 +19,9 @@ function App() {
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
 
-  const itemMatch = path.match(/^\/items\/(.+)$/)
+  const donationMatch = path.match(/^\/items\/([^\/]+)\/donate$/)
+  const discussionMatch = path.match(/^\/items\/([^\/]+)\/discussions$/)
+  const itemMatch = path.match(/^\/items\/([^\/]+)$/)
 
   return (
     <div className="app">
@@ -30,11 +34,13 @@ function App() {
       )}
 
       <main className="app-main">
-        {itemMatch ? (
+        {donationMatch ? (
+          <ItemDonationPage itemId={donationMatch[1]} />
+        ) : discussionMatch ? (
+          <ItemDiscussionPage itemId={discussionMatch[1]} />
+        ) : itemMatch ? (
           <ItemPage itemId={itemMatch[1]} />
-        ) : (
-          null
-        )}
+        ) : null}
       </main>
     </div>
   )
