@@ -1,25 +1,117 @@
+import React, { useEffect, useRef, useState } from 'react'
+
 function Header({ onMailClick }) {
+  const [open, setOpen] = useState(false)
+  const [loggedIn, setLoggedIn] = useState(Boolean(localStorage.getItem('logged_in_id')))
+  const [role, setRole] = useState(localStorage.getItem('logged_in_role') || '')
+  const ref = useRef(null)
+
+  useEffect(() => {
+    function handleStorage() {
+      setLoggedIn(Boolean(localStorage.getItem('logged_in_id')))
+      setRole(localStorage.getItem('logged_in_role') || '')
+    }
+    function handleDocClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    window.addEventListener('storage', handleStorage)
+    document.addEventListener('click', handleDocClick)
+    return () => {
+      window.removeEventListener('storage', handleStorage)
+      document.removeEventListener('click', handleDocClick)
+    }
+  }, [])
+
+  function goHash(h) {
+    window.location.hash = h
+    setOpen(false)
+  }
+
+  function logout() {
+    localStorage.removeItem('logged_in_id')
+    localStorage.removeItem('logged_in_role')
+    localStorage.removeItem('logged_in_email')
+    setLoggedIn(false)
+    setRole('')
+    setOpen(false)
+    window.location.hash = '#/'
+  }
+
   return (
     <header
       style={{
-        padding: "1rem",
-        backgroundColor: "#282c34",
-        color: "white",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        fontSize: "1.2rem",
+        padding: '1rem',
+        backgroundColor: '#282c34',
+        color: 'white',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        fontSize: '1.2rem',
+        position: 'relative'
       }}
     >
-      <div
-        onClick={onMailClick}
-        style={{ cursor: "pointer" }}
-      >
-        Mail
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button className="btn" type="button" onClick={onMailClick} style={{ display: 'flex', alignItems: 'center', gap: 6 }} aria-label="Mail">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+            <path d="M3 5.5C3 4.67157 3.67157 4 4.5 4H19.5C20.3284 4 21 4.67157 21 5.5V18.5C21 19.3284 20.3284 20 19.5 20H4.5C3.67157 20 3 19.3284 3 18.5V5.5Z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M21 7L12 13L3 7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span>Mail</span>
+        </button>
       </div>
-      <div>Profile</div>
+
+      <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', fontWeight: 'bold', cursor: 'pointer' }} onClick={() => goHash('#/')}>
+        CFP
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button className="btn" type="button" onClick={() => goHash('#/statistics')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+            <path d="M3 3v18h18" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M7 13v5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M12 8v10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M17 3v15" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span>Statistics</span>
+        </button>
+        {role === 'moderator' ? (
+          <button className="btn" type="button" onClick={() => goHash('#/mod')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <path d="M12 12c2.7614 0 5-2.2386 5-5s-2.2386-5-5-5-5 2.2386-5 5 2.2386 5 5 5z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M21 21c0-4.4183-3.5817-8-8-8H11c-4.4183 0-8 3.5817-8 8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span>Mod Page</span>
+          </button>
+        ) : null}
+
+        <div ref={ref} style={{ position: 'relative' }}>
+          <button className="btn" type="button" onClick={() => setOpen(o => !o)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }} aria-expanded={open} aria-haspopup>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span>Account</span>
+          </button>
+          {open ? (
+            <div style={{ position: 'absolute', top: '100%', right: 0, background: 'white', color: '#222', border: '1px solid #ccc', padding: 8, minWidth: 140, zIndex: 50 }}>
+              {loggedIn ? (
+                <div>
+                  <div style={{ padding: 6, cursor: 'pointer' }} onClick={() => goHash('#/profile')}>Profile</div>
+                  <div style={{ padding: 6, cursor: 'pointer' }} onClick={() => goHash('#/reference')}>Reference</div>
+                  <div style={{ padding: 6, cursor: 'pointer' }} onClick={logout}>Logout</div>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ padding: 6, cursor: 'pointer' }} onClick={() => goHash('#/login')}>Log In</div>
+                  <div style={{ padding: 6, cursor: 'pointer' }} onClick={() => goHash('#/signup')}>Sign Up</div>
+                </div>
+              )}
+            </div>
+          ) : null}
+        </div>
+      </div>
     </header>
-  );
+  )
 }
 
-export default Header;
+export default Header
