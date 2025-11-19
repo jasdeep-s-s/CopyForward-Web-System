@@ -1,10 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react'
+import MessagePopup from './pages/MessagePopup'
 
 function Header({ onMailClick }) {
   const [open, setOpen] = useState(false)
   const [loggedIn, setLoggedIn] = useState(Boolean(localStorage.getItem('logged_in_id')))
   const [role, setRole] = useState(localStorage.getItem('logged_in_role') || '')
   const ref = useRef(null)
+  const [showRefBox, setShowRefBox] = useState(false)
+  const [refEmail, setRefEmail] = useState('')
+  const [refLoading, setRefLoading] = useState(false)
+  const [refMessage, setRefMessage] = useState('')
 
   useEffect(() => {
     function handleStorage() {
@@ -37,7 +42,26 @@ function Header({ onMailClick }) {
     window.location.hash = '#/'
   }
 
+  function sendReference() {
+    const email = (refEmail || '').trim()
+    if (!email) { setRefMessage('Enter an email'); return }
+    setRefLoading(true); setRefMessage('')
+    fetch('/refer_member.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) })
+      .then(r => r.json())
+      .then(d => {
+        setRefLoading(false)
+        if (d && d.success) {
+          setRefMessage('Reference added')
+          setRefEmail('')
+          setShowRefBox(false)
+        } else {
+          setRefMessage(d && d.error ? d.error : 'Failed')
+        }
+      }).catch(() => { setRefLoading(false); setRefMessage('Network error') })
+  }
+
   return (
+    <>
     <header
       style={{
         padding: '1rem',
@@ -97,7 +121,7 @@ function Header({ onMailClick }) {
               {loggedIn ? (
                 <div>
                   <div style={{ padding: 6, cursor: 'pointer' }} onClick={() => goHash('#/profile')}>Profile</div>
-                  <div style={{ padding: 6, cursor: 'pointer' }} onClick={() => goHash('#/reference')}>Reference</div>
+                  <div style={{ padding: 6, cursor: 'pointer' }} onClick={() => { setShowRefBox(true); setRefMessage('') }}>Reference</div>
                   <div style={{ padding: 6, cursor: 'pointer' }} onClick={logout}>Logout</div>
                 </div>
               ) : (
@@ -111,6 +135,21 @@ function Header({ onMailClick }) {
         </div>
       </div>
     </header>
+    {showRefBox ? (
+      <MessagePopup onClose={() => setShowRefBox(false)}>
+        <div>
+          <h3>Refer a person</h3>
+          <p>Enter the email address of the person you want to refer</p>
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <input value={refEmail} onChange={e => setRefEmail(e.target.value)} placeholder="email@example.com" style={{ flex: 1 }} />
+            <button className="btn" type="button" onClick={sendReference} disabled={refLoading}>{refLoading ? 'Sending...' : 'Send'}</button>
+            <button className="btn" type="button" onClick={() => setShowRefBox(false)}>Cancel</button>
+          </div>
+          {refMessage ? <div style={{ marginTop: 8, color: refMessage === 'Reference added' ? 'darkgreen' : 'darkred' }}>{refMessage}</div> : null}
+        </div>
+      </MessagePopup>
+    ) : null}
+    </>
   )
 }
 
