@@ -24,8 +24,9 @@ try {
         $sql = "SELECT\n"
              . "  i.Type,\n"
              . "  COUNT(i.ItemID) AS ItemCount,\n"
-             . "  (COUNT(i.ItemID) * 100.0 / (SELECT COUNT(*) FROM Item)) AS ItemPercentage\n"
+             . "  (COUNT(i.ItemID) * 100.0 / (SELECT COUNT(*) FROM Item WHERE Status NOT IN ('Removed','Under Review (Upload)'))) AS ItemPercentage\n"
              . "FROM Item i\n"
+             . "WHERE i.Status NOT IN ('Removed','Under Review (Upload)')\n"
              . "GROUP BY i.Type";
 
         $res = $mysqli->query($sql);
@@ -48,6 +49,7 @@ try {
              . "  COUNT(d.ItemID) AS DownloadCount\n"
              . "FROM Item i\n"
              . "LEFT JOIN Download d ON i.ItemID = d.ItemID\n"
+             . "WHERE i.Status NOT IN ('Removed','Under Review (Upload)')\n"
              . "GROUP BY i.Type";
 
         $res = $mysqli->query($sql);
@@ -63,16 +65,16 @@ try {
         exit;
     }
 
-    if ($report === 'annual_by_country') {
-        $sql = "SELECT\n"
-             . "  a.Country,\n"
-             . "  COUNT(d.ItemID) AS DownloadCount\n"
-             . "FROM Item i\n"
-             . "LEFT JOIN Download d ON i.ItemID = d.ItemID\n"
-             . "LEFT JOIN Member m ON m.MemberID = d.DownloaderID\n"
-             . "LEFT JOIN Address a ON m.AddressID = a.AddressID\n"
-             . "where a.Country IS NOT NULL\n"
-               . "GROUP BY a.Country\n";
+        if ($report === 'annual_by_country') {
+                $sql = "SELECT\n"
+                         . "  a.Country,\n"
+                         . "  COUNT(d.ItemID) AS DownloadCount\n"
+                         . "FROM Item i\n"
+                         . "LEFT JOIN Download d ON i.ItemID = d.ItemID\n"
+                         . "LEFT JOIN Member m ON m.MemberID = d.DownloaderID\n"
+                         . "LEFT JOIN Address a ON m.AddressID = a.AddressID\n"
+                         . "WHERE i.Status NOT IN ('Removed','Under Review (Upload)') AND a.Country IS NOT NULL\n"
+                             . "GROUP BY a.Country\n";
 
         $res = $mysqli->query($sql);
         if (!$res) throw new Exception($mysqli->error);
@@ -92,6 +94,7 @@ try {
                . "FROM Item i\n"
                . "LEFT JOIN Download d ON i.ItemID = d.ItemID\n"
                . "LEFT JOIN Member a ON i.AuthorID = a.ORCID\n"
+               . "WHERE i.Status NOT IN ('Removed','Under Review (Upload)')\n"
                . "GROUP BY a.Name, a.Organization\n"
                . "ORDER BY DownloadCount DESC";
 
@@ -114,6 +117,7 @@ try {
              . "FROM Item i\n"
              . "LEFT JOIN Download d ON i.ItemID = d.ItemID\n"
              . "LEFT JOIN Member a ON i.AuthorID = a.ORCID\n"
+             . "WHERE i.Status NOT IN ('Removed','Under Review (Upload)')\n"
              . "GROUP BY i.ItemID, i.Title, a.Name, i.Type\n"
              . "ORDER BY DownloadCount DESC\n"
              . "LIMIT 10";
@@ -140,13 +144,16 @@ try {
     $q = $mysqli->query("SELECT COUNT(*) AS c FROM Member");
     $totals['totalMembers'] = $q ? intval($q->fetch_assoc()['c']) : 0;
 
-    $q = $mysqli->query("SELECT COUNT(*) AS c FROM Item");
+    // total items excluding removed or under-review uploads
+    $q = $mysqli->query("SELECT COUNT(*) AS c FROM Item WHERE Status NOT IN ('Removed','Under Review (Upload)')");
     $totals['totalItems'] = $q ? intval($q->fetch_assoc()['c']) : 0;
 
-    $q = $mysqli->query("SELECT COUNT(*) AS c FROM Download");
+    // total downloads for items that are not removed / under review
+    $q = $mysqli->query("SELECT COUNT(d.ItemID) AS c FROM Download d JOIN Item i ON d.ItemID = i.ItemID WHERE i.Status NOT IN ('Removed','Under Review (Upload)')");
     $totals['totalDownloads'] = $q ? intval($q->fetch_assoc()['c']) : 0;
 
-    $q = $mysqli->query("SELECT COALESCE(SUM(Amount),0) AS s FROM Donation");
+    // total donations for items that are not removed / under review
+    $q = $mysqli->query("SELECT COALESCE(SUM(don.Amount),0) AS s FROM Donation don JOIN Item i2 ON don.ItemID = i2.ItemID WHERE i2.Status NOT IN ('Removed','Under Review (Upload)')");
     $totals['totalDonations'] = $q ? floatval($q->fetch_assoc()['s']) : 0.0;
 
     echo json_encode($totals);

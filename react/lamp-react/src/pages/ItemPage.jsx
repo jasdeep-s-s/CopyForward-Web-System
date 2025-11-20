@@ -175,6 +175,26 @@ function ItemPage ({ itemId }) {
 
 	if (!item) return <div className="item-page">Loading...</div>
 
+	if (item.status === 'Removed') {
+		return (
+			<div className="item-page">
+				<header className="item-header">
+					<h1 className="item-title">This item has been removed</h1>
+				</header>
+			</div>
+		)
+	}
+
+	if (item.status === 'Under Review (Upload)') {
+		return (
+			<div className="item-page">
+				<header className="item-header">
+					<h1 className="item-title">This item hasn't been approved by a moderator yet.</h1>
+				</header>
+			</div>
+		)
+	}
+
 	return (
 		<div className="item-page">
 			<header className="item-header">
