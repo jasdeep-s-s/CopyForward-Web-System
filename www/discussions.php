@@ -26,15 +26,19 @@ try {
         exit;
     }
 
-    $sql = "SELECT d.DiscussionID, COALESCE(c.Name, 'Unknown') AS Name, COALESCE(c.Description, '') AS Description, d.Subject, d.VoteActive, d.VotingDeadline, d.Status\n"
+    $sql = "SELECT DISTINCT d.DiscussionID, COALESCE(c.Name, 'Unknown') AS Name, COALESCE(c.Description, '') AS Description, d.Subject, d.VoteActive, d.VotingDeadline, d.Status, COALESCE(c.CommitteeID, 0) AS CommitteeID\n"
         . "FROM Discussion d\n"
         . "LEFT JOIN Committee c ON d.CommitteeID = c.CommitteeID\n"
         . "LEFT JOIN MemberCommittee mc ON c.CommitteeID = mc.CommitteeID\n"
-        . "WHERE d.ItemID = ? AND mc.MemberID = ?";
+        . "WHERE d.ItemID = ? AND (\n"
+        . "  (c.CommitteeID = 2 AND mc.MemberID = ?) OR\n"
+        . "  (c.CommitteeID = 1 AND EXISTS(SELECT 1 FROM `Download` dd WHERE dd.DownloaderID = ? AND dd.ItemID = ?)) OR\n"
+        . "  (c.CommitteeID NOT IN (1,2) AND mc.MemberID = ?)\n"
+        . ")";
 
     $stmt = $mysqli->prepare($sql);
     if (!$stmt) throw new Exception($mysqli->error);
-    $stmt->bind_param('ii', $itemId, $memberId);
+    $stmt->bind_param('iiiii', $itemId, $memberId, $memberId, $itemId, $memberId);
     if (!$stmt->execute()) throw new Exception($stmt->error ?: $mysqli->error);
     $res = $stmt->get_result();
 

@@ -73,7 +73,7 @@ function ItemDiscussionList ({ itemId }) {
       ) : (
         <div className="empty">
           {logged
-            ? 'No discussions visible — you are not a member of any committees for this item.'
+            ? 'No discussions visible.'
             : 'No discussions. Sign in to view committee discussions.'}
         </div>
       )}
