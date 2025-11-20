@@ -7,6 +7,7 @@ import ItemPage from './pages/ItemPage'
 import ItemDiscussionPage from './pages/ItemDiscussionPage'
 import ItemDonationPage from './pages/ItemDonation'
 import MemberPage from './pages/MemberPage'
+import StatisticsPage from './pages/StatisticsPage'
 
 function App() {
   const [showMailPopup, setShowMailPopup] = useState(false);
@@ -25,6 +26,7 @@ function App() {
   const itemMatch = path.match(/^\/items\/([^\/]+)$/)
   const messageMatch = path.match(/^\/message\/(.+)$/)
   const memberMatch = path.match(/^\/member\/(\d+)$/)
+  const statisticsMatch = path === '/statistics'
 
   return (
     <div className="app">
@@ -40,7 +42,9 @@ function App() {
       )}
 
       <main className="app-main">
-        {donationMatch ? (
+        {statisticsMatch ? (
+          <StatisticsPage />
+        ) : donationMatch ? (
           <ItemDonationPage itemId={donationMatch[1]} />
         ) : discussionMatch ? (
           <ItemDiscussionPage itemId={discussionMatch[1]} />
