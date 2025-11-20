@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-function InternalMessage() {
+function InternalMessage({ prefillTo, openCompose }) {
   const [email, setEmail] = useState("");
   const [memberId, setMemberId] = useState(null);
   const [tempEmail, setTempEmail] = useState("");
@@ -29,6 +29,15 @@ function InternalMessage() {
     }
   }, []);
 
+  useEffect(() => {
+    if (prefillTo) {
+      setComposeTo(prefillTo)
+      setShowCompose(true)
+    } else if (openCompose) {
+      setShowCompose(true)
+    }
+  }, [prefillTo, openCompose])
+
   const saveEmail = () => {
     if (!tempEmail.trim()) return;
     const cleaned = tempEmail.trim();
@@ -45,7 +54,6 @@ function InternalMessage() {
         );
         const data = await res.json();
         if (data.success && data.memberId) {
-          localStorage.setItem("logged_in_id", data.memberId);
           setMemberId(data.memberId);
         }
       };
@@ -151,7 +159,7 @@ function InternalMessage() {
           placeholder="you@example.com"
           style={{ padding: "0.4rem", width: "100%", marginBottom: "1rem" }}
         />
-        <button onClick={saveEmail}>Save Email</button>
+        <button className="btn" onClick={saveEmail}>Save Email</button>
       </div>
     );
   }
@@ -160,7 +168,7 @@ function InternalMessage() {
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <h2>Mail ({email})</h2>
-        <button onClick={() => setShowCompose((v) => !v)}>
+        <button className="btn" onClick={() => setShowCompose((v) => !v)}>
           {showCompose ? "Close" : "New Message"}
         </button>
       </div>
@@ -231,56 +239,49 @@ function InternalMessage() {
             <p style={{ color: "red", fontSize: "0.85rem" }}>{sendError}</p>
           )}
 
-          <button
-            type="submit"
-            disabled={sending}
-            style={{
-              alignSelf: "flex-start",
-              padding: "0.4rem 0.9rem",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              background: sending ? "#ddd" : "#f5f5f5",
-              cursor: sending ? "default" : "pointer",
-            }}
-          >
-            {sending ? "Sending..." : "Send"}
-          </button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button type="submit" className="btn" disabled={sending}>{sending ? 'Sending...' : 'Send'}</button>
+            <button type="button" className="btn" onClick={() => setShowCompose(false)}>Cancel</button>
+          </div>
         </form>
       )}
+      {!showCompose ? (
+        <>
+          <select value={view} onChange={(e) => setView(e.target.value)}>
+            <option value="received">Received</option>
+            <option value="sent">Sent</option>
+          </select>
 
-      <select value={view} onChange={(e) => setView(e.target.value)}>
-        <option value="received">Received</option>
-        <option value="sent">Sent</option>
-      </select>
+          <div style={{ border: "1px solid #ccc", padding: "1rem" }}>
+            {loading && <p>Loading...</p>}
 
-      <div style={{ border: "1px solid #ccc", padding: "1rem" }}>
-        {loading && <p>Loading...</p>}
+            {!loading && messages.length === 0 && <p>No messages found.</p>}
 
-        {!loading && messages.length === 0 && <p>No messages found.</p>}
-
-        {messages.map((m, i) => (
-          <div
-            key={i}
-            style={{
-              marginBottom: "1rem",
-              padding: "0.5rem",
-              background: "#fff",
-              borderRadius: "4px",
-              border: "1px solid #ddd",
-            }}
-          >
-            <div style={{ fontSize: "0.9rem", marginBottom: "0.25rem" }}>
-              {view === "received" ? (
-                <>From: {m.PeerEmail}</>
-              ) : (
-                <>To: {m.PeerEmail}</>
-              )}
-            </div>
-            <div style={{ fontSize: "0.8rem", color: "#666" }}>{m.Date}</div>
-            <div style={{ marginTop: "0.5rem" }}>{m.Message}</div>
+            {messages.map((m, i) => (
+              <div
+                key={i}
+                style={{
+                  marginBottom: "1rem",
+                  padding: "0.5rem",
+                  background: "#fff",
+                  borderRadius: "4px",
+                  border: "1px solid #ddd",
+                }}
+              >
+                <div style={{ fontSize: "0.9rem", marginBottom: "0.25rem" }}>
+                  {view === "received" ? (
+                    <>From: {m.PeerEmail}</>
+                  ) : (
+                    <>To: {m.PeerEmail}</>
+                  )}
+                </div>
+                <div style={{ fontSize: "0.8rem", color: "#666" }}>{m.Date}</div>
+                <div style={{ marginTop: "0.5rem" }}>{m.Message}</div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </>
+      ) : null}
     </div>
   );
 }
