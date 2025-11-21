@@ -137,7 +137,7 @@ CREATE TABLE DiscussionVote (
 
 CREATE TABLE PrivateMessage (
   PrivateMessageID INT PRIMARY KEY AUTO_INCREMENT,
-  SenderID INT NOT NULL,
+  SenderID INT,
   ReceiverID INT NOT NULL,
   Date DATETIME,
   Message VARCHAR(2048),
