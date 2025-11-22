@@ -21,7 +21,6 @@ CREATE TABLE Member (
   Password VARCHAR(256) NOT NULL,
   ORCID CHAR(19) UNIQUE,
   Blacklisted BOOL DEFAULT FALSE,
-  Pseudo VARCHAR(256),
   FOREIGN KEY (AddressID) REFERENCES Address(AddressID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -50,6 +49,7 @@ CREATE TABLE Comment (
   Comment VARCHAR(2048),
   Date DATETIME,
   ParentCommentID INT,
+  Private Bool,
   FOREIGN KEY (ItemID) REFERENCES Item(ItemID),
   FOREIGN KEY (CommentorID) REFERENCES Member(MemberID),
   FOREIGN KEY (ParentCommentID) REFERENCES Comment(CommentID)
@@ -62,12 +62,6 @@ CREATE TABLE Download (
   Date DATETIME,
   FOREIGN KEY (ItemID) REFERENCES Item(ItemID),
   FOREIGN KEY (DownloaderID) REFERENCES Member(MemberID)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE Access (
-  AccessID INT PRIMARY KEY AUTO_INCREMENT,
-  ItemID INT NOT NULL,
-  FOREIGN KEY (ItemID) REFERENCES Item(ItemID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE ChildrenCharity (
@@ -143,7 +137,7 @@ CREATE TABLE DiscussionVote (
 
 CREATE TABLE PrivateMessage (
   PrivateMessageID INT PRIMARY KEY AUTO_INCREMENT,
-  SenderID INT NOT NULL,
+  SenderID INT,
   ReceiverID INT NOT NULL,
   Date DATETIME,
   Message VARCHAR(2048),
