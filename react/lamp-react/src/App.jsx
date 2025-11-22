@@ -5,6 +5,7 @@ import MessagePopup from './pages/MessagePopup'
 import InternalMessage from './pages/InternalMessage'
 import ItemPage from './pages/ItemPage'
 import ItemDiscussionPage from './pages/ItemDiscussionPage'
+import DiscussionThreadPage from './pages/DiscussionThreadPage'
 import ItemDonationPage from './pages/ItemDonation'
 import MemberPage from './pages/MemberPage'
 import StatisticsPage from './pages/StatisticsPage'
@@ -24,7 +25,8 @@ function App() {
   }, [])
 
   const donationMatch = path.match(/^\/items\/([^\/]+)\/donate$/)
-  const discussionMatch = path.match(/^\/items\/([^\/]+)\/discussions$/)
+  const discussionMatch = path.match(/^\/items\/([^\/]+)\/discussions?$/)
+  const discussionThreadMatch = path.match(/^\/items\/([^\/]+)\/discussions\/(\d+)$/)
   const itemMatch = path.match(/^\/items\/([^\/]+)$/)
   const messageMatch = path.match(/^\/message\/(.+)$/)
   const memberMatch = path.match(/^\/member\/(\d+)$/)
@@ -47,6 +49,8 @@ function App() {
       <main className="app-main">
         {statisticsMatch ? (
           <StatisticsPage />
+        ) : discussionThreadMatch ? (
+          <DiscussionThreadPage itemId={discussionThreadMatch[1]} discussionId={discussionThreadMatch[2]} />
         ) : authorsMatch ? (
           <AuthorsPage />
         ) : donationMatch ? (
