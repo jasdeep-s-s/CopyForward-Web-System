@@ -37,37 +37,37 @@ INSERT INTO Address (StreetNumber, StreetName, City, Country) VALUES
 -- ORCID is CHAR(19), we use real ORCID-like format dddd-dddd-dddd-dddd
 ------------------------------------------------------------
 INSERT INTO Member
-(Role, Name, Username, Organization, AddressID, PrimaryEmail, RecoveryEmail, Password, ORCID, Blacklisted, Pseudo)
+(Role, Name, Username, Organization, AddressID, PrimaryEmail, RecoveryEmail, Password, ORCID, Blacklisted)
 VALUES
 -- MemberID 1: Author (Alice)
 ('Author',   'Alice Author',   'aliceA',  'Concordia University', 1,
  'alice@example.com', 'alice.recovery@example.com', 'pass123',
- '0000-0000-0000-0001', FALSE, 'AliceWrites'),
+ '0000-0000-0000-0001', FALSE),
 
 -- MemberID 2: Author (Bob)
 ('Author',   'Bob Brown',      'bobB',    'McGill University',    2,
  'bob@example.com',   'bob.recovery@example.com',   'pass123',
- '0000-0000-0000-0002', FALSE, 'BobResearch'),
+ '0000-0000-0000-0002', FALSE),
 
 -- MemberID 3: Regular (Carol)
 ('Regular',  'Carol Clark',    'carolC',  'Independent',          3,
  'carol@example.com', 'carol.recovery@example.com', 'pass123',
- NULL, FALSE, 'CarolReader'),
+ NULL, FALSE),
 
 -- MemberID 4: Moderator (Mike)
 ('Moderator','Mike Moderator', 'mikeM',   'CFP Staff',            1,
  'mike@example.com',  'mike.recovery@example.com',  'pass123',
- NULL, FALSE, 'ModMike'),
+ NULL, FALSE),
 
 -- MemberID 5: Author (Dana)
 ('Author',   'Dana Doe',       'danaD',   'UdeM',                 4,
  'dana@example.com',  'dana.recovery@example.com',  'pass123',
- '0000-0000-0000-0003', FALSE, 'DanaWrites'),
+ '0000-0000-0000-0003', FALSE),
 
 -- MemberID 6: Regular (Eric)
 ('Regular',  'Eric Evans',     'ericE',   'Student',              5,
  'eric@example.com',  'eric.recovery@example.com',  'pass123',
- NULL, FALSE, 'EricUser');
+ NULL, FALSE);
 
 
 ------------------------------------------------------------
@@ -123,22 +123,22 @@ VALUES
 -- 4. COMMENTS
 ------------------------------------------------------------
 INSERT INTO Comment
-(ItemID, CommentorID, Comment, Date, ParentCommentID)
+(ItemID, CommentorID, Comment, Date, ParentCommentID, Private)
 VALUES
 -- CommentID 1: Carol on Item 1
-(1, 3, 'Great article, very helpful!', '2023-02-15 10:30:00', NULL),
+(1, 3, 'Great article, very helpful!', '2023-02-15 10:30:00', NULL, FALSE),
 
 -- CommentID 2: Alice replying to Carol
 (1, 1, 'Thanks for the feedback!', '2023-02-16 09:00:00', 1),
 
 -- CommentID 3: Eric on Item 2
-(2, 6, 'Your thesis is very clear and detailed.', '2023-01-05 14:00:00', NULL),
+(2, 6, 'Your thesis is very clear and detailed.', '2023-01-05 14:00:00', NULL, FALSE),
 
 -- CommentID 4: Carol on Item 4
-(4, 3, 'Very interesting approach to patient data.', '2023-06-01 16:30:00', NULL),
+(4, 3, 'Very interesting approach to patient data.', '2023-06-01 16:30:00', NULL, FALSE),
 
 -- CommentID 5: Bob on Item 5
-(5, 2, 'The extended version adds great value.', '2023-06-20 11:20:00', NULL);
+(5, 2, 'The extended version adds great value.', '2023-06-20 11:20:00', NULL, FALSE);
 
 
 ------------------------------------------------------------
@@ -151,14 +151,6 @@ INSERT INTO Download (ItemID, DownloaderID, Date) VALUES
 (2, 6, '2023-01-04 13:15:00'),
 (4, 6, '2023-06-02 10:10:00'),
 (5, 3, '2023-06-21 08:00:00');
-
-
-------------------------------------------------------------
--- 6. ACCESS (simple tracking of which items have been accessed)
-------------------------------------------------------------
-INSERT INTO Access (ItemID) VALUES
-(1), (2), (3), (4), (5);
-
 
 ------------------------------------------------------------
 -- 7. CHILDREN CHARITY
