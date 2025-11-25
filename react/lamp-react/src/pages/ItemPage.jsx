@@ -211,13 +211,58 @@ function ItemPage ({ itemId }) {
 	if (!item) return <div className="item-page">Loading...</div>
 
 	if (item.status === 'Removed') {
-		return (
-			<div className="item-page">
-				<header className="item-header">
-					<h1 className="item-title">This item has been removed</h1>
-				</header>
-			</div>
-		)
+			const loggedId = localStorage.getItem('logged_in_id')
+			const isAuthor = loggedId && item.authorMemberId && Number(loggedId) === Number(item.authorMemberId)
+
+			async function handleAppeal () {
+				const logged = localStorage.getItem('logged_in_id')
+				if (!logged) { alert('You must be signed in to appeal.'); return }
+				const ok = window.confirm('Submit an appeal to the appeals committee? This will notify the appeals committee.')
+				if (!ok) return
+
+				try {
+					const res = await fetch('/appeal_item.php', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ memberId: Number(logged), itemId: Number(item.id) })
+					})
+					const j = await res.json()
+					if (j && j.success) {
+						alert('Appeal submitted' + (j.discussionId ? ` (discussion ${j.discussionId})` : ''))
+					} else {
+						if (j && j.error === 'not_author') alert('Appeal not allowed: you are not verified as the author.')
+						else if (j && j.error) alert('Failed to submit appeal: ' + j.error)
+						else alert('Failed to submit appeal')
+					}
+				} catch (err) {
+					console.error('appeal error', err)
+					alert('Network error while submitting appeal')
+				}
+			}
+
+			return (
+				<div className="item-page">
+					<header className="item-header">
+						<h1 className="item-title">This item has been removed</h1>
+					</header>
+					<div style={{ padding: 12 }}>
+						{isAuthor ? (
+							<div>
+								<p>If you are the author and believe removal was incorrect, you may appeal to the appeals committee.</p>
+								<div style={{ display: 'flex', gap: 8 }}>
+									<button className="btn" onClick={handleAppeal}>Appeal</button>
+									<button className="btn" onClick={() => { window.location.hash = `#/items/${item.id}/discussions` }}>Discussions</button>
+								</div>
+							</div>
+						) : (
+							<div>
+								<p>This item has been removed.</p>
+								<button className="btn" onClick={() => { window.location.hash = `#/items/${item.id}/discussions` }}>Discussions</button>
+							</div>
+						)}
+					</div>
+				</div>
+			)
 	}
 
 	if (item.status === 'Under Review (Upload)') {
