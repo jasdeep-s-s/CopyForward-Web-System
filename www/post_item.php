@@ -41,6 +41,26 @@ try {
         exit;
     }
 
+    $mstmt = $mysqli->prepare(
+        "SELECT MemberID, Blacklisted 
+        FROM Member 
+        WHERE ORCID = ? 
+        LIMIT 1"
+    );
+    if (!$mstmt) throw new Exception($mysqli->error);
+    $mstmt->bind_param('s', $authorOrcid);
+    $mstmt->execute();
+    $mres = $mstmt->get_result();
+    $mrow = $mres->fetch_assoc();
+    if (!$mrow) {
+        echo json_encode(["success" => false, "error" => "author_not_found"]);
+        exit;
+    }
+    if (isset($mrow['Blacklisted']) && intval($mrow['Blacklisted']) === 1) {
+        echo json_encode(["success" => false, "error" => "blacklisted"]);
+        exit;
+    }
+
     $sql = "INSERT INTO Item (AuthorID, Title, PublicationDate, UploadDate, ApprovedBy, Topic, Type, Status, ParentTitleID, Content, UpdatedAt) 
     VALUES (?, ?, ?, NOW(), NULL, ?, ?, 'Under Review (Upload)', ?, ?, NOW())";
 
