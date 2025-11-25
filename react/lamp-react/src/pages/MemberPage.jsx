@@ -13,6 +13,7 @@ function MemberPage ({ memberId: propMemberId }) {
   const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
   const [items, setItems] = useState([])
+  const [pending, setPending] = useState([])
 
   useEffect(() => {
     function onHash() {
@@ -54,6 +55,18 @@ function MemberPage ({ memberId: propMemberId }) {
       .catch(() => setItems([]))
   }, [member])
 
+  useEffect(() => {
+    if (!member || !member.ORCID) return
+    if (localStorage.getItem('logged_in_role') !== 'author') return
+    const orcid = member.ORCID
+    fetch(`/member_pending_items.php?orcid=${encodeURIComponent(orcid)}`)
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) setPending(data)
+        else setPending([])
+      }).catch(() => setPending([]))
+  }, [member])
+
   function messageMember() {
     const logged = localStorage.getItem('logged_in_id')
     if (!logged) { alert('Please sign in to message'); return }
@@ -61,7 +74,44 @@ function MemberPage ({ memberId: propMemberId }) {
     window.location.hash = `#/message/${encodeURIComponent(member.PrimaryEmail)}`
   }
 
+  function addOrcid() {
+    const logged = localStorage.getItem('logged_in_id')
+    if (!logged) { alert('Please sign in to add ORCID'); return }
+    const orcid = window.prompt('Enter your ORCID:')
+    if (!orcid) return
+    const regex = /^\d{4}-\d{4}-\d{4}-\d{4}$/
+    if (!regex.test(orcid.trim())) {
+      alert('Invalid ORCID format. Expected like 0000-0000-0000-0000');
+      return
+    }
+
+    fetch('/update_orcid.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ memberId: Number(logged), orcid: orcid.trim() })
+    }).then(r => r.json())
+      .then(d => {
+        if (d && d.success) {
+          localStorage.setItem('logged_in_role', 'author')
+          if (member && Number(member.MemberID) === Number(logged)) loadMember(Number(logged))
+          alert('ORCID updated')
+        } else {
+          if (d && d.error) {
+            if (d.error === 'orcid_in_use') alert('That ORCID is already in use by another account.')
+            else if (d.error === 'invalid_orcid_format') alert('ORCID format is invalid.')
+            else if (d.error === 'missing_params') alert('Missing parameters sent to server.')
+            else alert('Failed to update ORCID: ' + d.error)
+          } else {
+            alert('Failed to update ORCID')
+          }
+        }
+      }).catch(() => alert('Network error'))
+  }
+
   const headerTitle = member ? (member.Username ? `${member.Username}'s Profile` : (member.Name ? `${member.Name}'s Profile` : 'Member Profile')) : 'Member Profile'
+  const loggedId = Number(localStorage.getItem('logged_in_id'))
+  const isOwn = member && Number(member.MemberID) === loggedId
+  const role = localStorage.getItem('logged_in_role') || ''
 
   return (
     <div className="item-page">
@@ -81,7 +131,13 @@ function MemberPage ({ memberId: propMemberId }) {
           {member.PrimaryEmail ? <div><strong>Primary Email:</strong> {member.PrimaryEmail}</div> : null}
           {member.ORCID ? <div><strong>ORCID:</strong> {member.ORCID}</div> : null}
           <div style={{ marginTop: 12 }}>
-            <button className="btn" onClick={messageMember}>Message</button>
+            {isOwn ? (
+              role === 'regular' ? (
+                <button className="btn" onClick={addOrcid}>Add ORCID</button>
+              ) : null
+            ) : (
+              <button className="btn" onClick={messageMember}>Message</button>
+            )}
           </div>
         </div>
       ) : null}
@@ -130,6 +186,28 @@ function MemberPage ({ memberId: propMemberId }) {
               </ul>
             ) : (
               <div className="empty">No authored items found</div>
+            )}
+          </div>
+        </section>
+      ) : null}
+
+      {member && member.ORCID && isOwn && role === 'author' ? (
+        <section className="versions" style={{ marginTop: 20 }}>
+          <h2>Pending Approval</h2>
+          <div style={{ marginTop: 8 }}>
+            {pending.length ? (
+              <ul className="versions-list">
+                {pending.map(p => (
+                  <li key={p.ItemID}>
+                    <a className="version-link" href={`#/items/${p.ItemID}`} onClick={e => { e.preventDefault(); window.location.hash = `#/items/${p.ItemID}` }}>
+                      <span className="version-label">{p.Title || `Item ${p.ItemID}`}</span>
+                    </a>
+                    {p.UploadDate ? <span className="version-date"> - {p.UploadDate}</span> : null}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="empty">No pending items</div>
             )}
           </div>
         </section>
