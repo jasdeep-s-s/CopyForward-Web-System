@@ -173,6 +173,41 @@ function ItemPage ({ itemId }) {
 			})
 	}
 
+
+	const reportSuccess = (did) => {
+		alert('Report submitted' + (did ? ` (discussion ${did})` : ''))
+	}
+
+	async function handleReport () {
+		const logged = localStorage.getItem('logged_in_id')
+		if (!logged) { alert('You must be signed in to report an item.'); return }
+		const ok = window.confirm('Report this item for plagiarism? This will notify the plagiarism committee.')
+		if (!ok) return
+
+		try {
+			const res = await fetch('/report_item.php', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ memberId: Number(logged), itemId: Number(item.id) })
+			})
+			const j = await res.json()
+			if (j && j.success) {
+				reportSuccess(j.discussionId)
+			} else {
+				if (j && j.error === 'not_allowed') {
+					console.debug('report suppressed: not_allowed')
+				} else if (j && j.error) {
+					alert('Failed to submit report: ' + j.error)
+				} else {
+					alert('Failed to submit report')
+				}
+			}
+		} catch (err) {
+			console.error('report error', err)
+			alert('Network error while submitting report')
+		}
+	}
+
 	if (!item) return <div className="item-page">Loading...</div>
 
 	if (item.status === 'Removed') {
@@ -237,7 +272,7 @@ function ItemPage ({ itemId }) {
 				{localStorage.getItem('logged_in_id') ? (
 					<button className="btn" onClick={() => { window.location.hash = `#/items/${item.id}/discussions` }}>Discussions</button>
 				) : null}
-				<button className="btn report">Report</button>
+				<button className="btn report" onClick={handleReport}>Report</button>
 			</div>
 
 			<section className="versions">

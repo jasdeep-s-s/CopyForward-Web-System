@@ -201,9 +201,11 @@ BEGIN
         SET Status = 'Under Review (Plagiarism)'
         WHERE AuthorID = author_orcid AND Status = 'Available' AND ItemID != d_item;
       END IF;
-    END IF;
 
-    UPDATE Discussion SET VoteActive = FALSE WHERE DiscussionID = d_id;
+      UPDATE Discussion SET VoteActive = FALSE, Status = 'Blacklisted' WHERE DiscussionID = d_id;
+    ELSE
+      UPDATE Discussion SET VoteActive = FALSE, Status = 'Dismissed' WHERE DiscussionID = d_id;
+    END IF;
   END LOOP;
   CLOSE cur;
 END$$
@@ -245,9 +247,11 @@ BEGIN
           VALUES (NULL, author_member, NOW(),
             CONCAT('Your item "', (SELECT IFNULL(Title, 'Untitled') FROM Item WHERE ItemID = d_item), '" has been reinstated following an appeal committee vote.'));
       END IF;
-    END IF;
 
-    UPDATE Discussion SET VoteActive = FALSE WHERE DiscussionID = d_id;
+      UPDATE Discussion SET VoteActive = FALSE, Status = 'Appeal' WHERE DiscussionID = d_id;
+    ELSE
+      UPDATE Discussion SET VoteActive = FALSE, Status = 'Dismissed' WHERE DiscussionID = d_id;
+    END IF;
   END LOOP;
   CLOSE cur;
 END$$
