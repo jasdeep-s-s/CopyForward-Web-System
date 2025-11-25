@@ -149,18 +149,49 @@ function MemberPage ({ memberId: propMemberId }) {
             {items.length ? (
               <ul className="versions-list">
                 {(() => {
-                  const byParent = {}
-                  const top = []
+                  const nodes = {}
                   for (const it of items) {
+                    nodes[Number(it.ItemID)] = it
+                  }
+
+                  const roots = []
+                  const childrenByRoot = {}
+
+                  for (const it of items) {
+                    const id = Number(it.ItemID)
                     const pid = it.ParentTitleID ? Number(it.ParentTitleID) : 0
-                    if (pid === 0) top.push(it)
-                    else {
-                      if (!byParent[pid]) byParent[pid] = []
-                      byParent[pid].push(it)
+                    if (pid === 0 || !nodes[pid]) {
+                      roots.push(it)
+                      childrenByRoot[id] = childrenByRoot[id] || []
                     }
                   }
-                  top.sort((a,b) => new Date(a.UploadDate) - new Date(b.UploadDate))
-                  return top.map(parent => (
+
+                  for (const it of items) {
+                    const id = Number(it.ItemID)
+                    const pid = it.ParentTitleID ? Number(it.ParentTitleID) : 0
+                    if (pid === 0) continue
+                    let curPid = pid
+                    let steps = 0
+                    while (curPid && nodes[curPid] && steps < 50) {
+                      const parent = nodes[curPid]
+                      const parentPid = parent.ParentTitleID ? Number(parent.ParentTitleID) : 0
+                      if (parentPid === 0 || !nodes[parentPid]) {
+                        childrenByRoot[curPid] = childrenByRoot[curPid] || []
+                        childrenByRoot[curPid].push(it)
+                        break
+                      }
+                      curPid = parentPid
+                      steps += 1
+                    }
+                    if (steps >= 50) {
+                      roots.push(it)
+                      childrenByRoot[id] = childrenByRoot[id] || []
+                    }
+                  }
+
+                  roots.sort((a, b) => new Date(a.UploadDate) - new Date(b.UploadDate))
+
+                  return roots.map(parent => (
                     <li key={parent.ItemID}>
                       <a className="version-link" href={`#/items/${parent.ItemID}`} onClick={e => { e.preventDefault(); window.location.hash = `#/items/${parent.ItemID}` }}>
                         <span className="version-label">{parent.Title || `Item ${parent.ItemID}`}</span>
@@ -169,7 +200,7 @@ function MemberPage ({ memberId: propMemberId }) {
                       <div style={{ fontSize: '0.9rem', color: '#555', marginTop: 4 }}>
                         Downloads: {parent.DownloadCount || 0} — Raised: ${Number(parent.TotalDonations || 0).toFixed(2)}
                       </div>
-                      {(byParent[parent.ItemID] || []).map(child => (
+                      {(childrenByRoot[parent.ItemID] || []).map(child => (
                         <div key={child.ItemID} style={{ marginLeft: 18, marginTop: 8 }}>
                           <a className="version-link" href={`#/items/${child.ItemID}`} onClick={e => { e.preventDefault(); window.location.hash = `#/items/${child.ItemID}` }}>
                             <span className="version-label">{child.Title || `Item ${child.ItemID}`}</span>

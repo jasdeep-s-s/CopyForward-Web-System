@@ -138,9 +138,14 @@ function AddItemForm({ onClose }) {
           <label><strong>Parent Item (optional)</strong></label>
           <select value={parentId} onChange={e => setParentId(e.target.value)}>
             <option value="">(none)</option>
-            {parentItems.map(it => (
-              <option key={it.ItemID} value={it.ItemID}>{it.Title} ({it.ItemID})</option>
-            ))}
+            {parentItems
+              .filter(it => {
+                const pid = it.ParentTitleID ? Number(it.ParentTitleID) : 0
+                return pid === 0
+              })
+              .map(it => (
+                <option key={it.ItemID} value={it.ItemID}>{it.Title} ({it.ItemID})</option>
+              ))}
           </select>
         </div>
         <div style={{ marginBottom: 8 }}>
