@@ -14,6 +14,9 @@ function MemberPage ({ memberId: propMemberId }) {
     const [error, setError] = useState('')
   const [items, setItems] = useState([])
   const [pending, setPending] = useState([])
+  const [downloads, setDownloads] = useState([])
+  const [contributions, setContributions] = useState([])
+  const [committees, setCommittees] = useState([])
 
   useEffect(() => {
     function onHash() {
@@ -65,6 +68,24 @@ function MemberPage ({ memberId: propMemberId }) {
         if (Array.isArray(data)) setPending(data)
         else setPending([])
       }).catch(() => setPending([]))
+  }, [member])
+
+  useEffect(() => {
+    if (!member || !member.MemberID) return
+    const id = Number(member.MemberID)
+    fetch(`/member_downloads.php?member=${encodeURIComponent(id)}`)
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setDownloads(d); else setDownloads([]) })
+      .catch(() => setDownloads([]))
+
+    fetch(`/member_contributions.php?member=${encodeURIComponent(id)}`)
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setContributions(d); else setContributions([]) })
+      .catch(() => setContributions([]))
+    fetch(`/member_committees.php?member=${encodeURIComponent(id)}`)
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setCommittees(d); else setCommittees([]) })
+      .catch(() => setCommittees([]))
   }, [member])
 
   function messageMember() {
@@ -129,7 +150,7 @@ function MemberPage ({ memberId: propMemberId }) {
           {member.Username ? <div><strong>Username:</strong> {member.Username}</div> : null}
           {member.Organization ? <div><strong>Organization:</strong> {member.Organization}</div> : null}
           {member.PrimaryEmail ? <div><strong>Primary Email:</strong> {member.PrimaryEmail}</div> : null}
-          {member.ORCID ? <div><strong>ORCID:</strong> {member.ORCID}</div> : null}
+            {member.ORCID ? <div><strong>ORCID:</strong> {member.ORCID}</div> : null}
           <div style={{ marginTop: 12 }}>
             {isOwn ? (
               role === 'regular' ? (
@@ -140,6 +161,67 @@ function MemberPage ({ memberId: propMemberId }) {
             )}
           </div>
         </div>
+      ) : null}
+
+      {member ? (
+        <section className="versions" style={{ marginTop: 20 }}>
+          <h2>Committees</h2>
+          <div style={{ marginTop: 8 }}>
+            {committees.length ? (
+              <ul className="versions-list">
+                {committees.map((c, idx) => (
+                  <li key={idx}>
+                    <span className="version-label">{c.CommitteeName || 'Unnamed committee'}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="empty">No committees</div>
+            )}
+          </div>
+        </section>
+
+      ) : null}
+
+      {member ? (
+        <section className="versions" style={{ marginTop: 20 }}>
+          <h2>Downloads</h2>
+          <div style={{ marginTop: 8 }}>
+            {downloads.length ? (
+              <ul className="versions-list">
+                {downloads.map((d, idx) => (
+                  <li key={idx}>
+                    <span className="version-label">{d.ItemTitle || 'Unknown item'}</span>
+                    {d.DownloadDate ? <span className="version-date"> — {d.DownloadDate}</span> : null}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="empty">No downloads</div>
+            )}
+          </div>
+        </section>
+      ) : null}
+
+      {member ? (
+        <section className="versions" style={{ marginTop: 20 }}>
+          <h2>Contributions</h2>
+          <div style={{ marginTop: 8 }}>
+            {contributions.length ? (
+              <ul className="versions-list">
+                {contributions.map((c, idx) => (
+                  <li key={idx}>
+                    <span className="version-label">{c.ItemTitle || 'Unknown item'}</span>
+                    {typeof c.Amount !== 'undefined' ? <span style={{ marginLeft: 8 }}>${Number(c.Amount).toFixed(2)}</span> : null}
+                    {c.DonationDate ? <span className="version-date"> — {c.DonationDate}</span> : null}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="empty">No contributions</div>
+            )}
+          </div>
+        </section>
       ) : null}
 
       {member && member.ORCID ? (
