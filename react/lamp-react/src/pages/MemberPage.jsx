@@ -192,7 +192,7 @@ function MemberPage ({ memberId: propMemberId }) {
                 {downloads.map((d, idx) => (
                   <li key={idx}>
                     <span className="version-label">{d.ItemTitle || 'Unknown item'}</span>
-                    {d.DownloadDate ? <span className="version-date"> — {d.DownloadDate}</span> : null}
+                    {d.DownloadDate ? <span className="version-date"> - {d.DownloadDate}</span> : null}
                   </li>
                 ))}
               </ul>
@@ -213,7 +213,7 @@ function MemberPage ({ memberId: propMemberId }) {
                   <li key={idx}>
                     <span className="version-label">{c.ItemTitle || 'Unknown item'}</span>
                     {typeof c.Amount !== 'undefined' ? <span style={{ marginLeft: 8 }}>${Number(c.Amount).toFixed(2)}</span> : null}
-                    {c.DonationDate ? <span className="version-date"> — {c.DonationDate}</span> : null}
+                    {c.DonationDate ? <span className="version-date"> - {c.DonationDate}</span> : null}
                   </li>
                 ))}
               </ul>
@@ -278,18 +278,18 @@ function MemberPage ({ memberId: propMemberId }) {
                       <a className="version-link" href={`#/items/${parent.ItemID}`} onClick={e => { e.preventDefault(); window.location.hash = `#/items/${parent.ItemID}` }}>
                         <span className="version-label">{parent.Title || `Item ${parent.ItemID}`}</span>
                       </a>
-                      {parent.UploadDate ? <span className="version-date"> — {parent.UploadDate}</span> : null}
+                      {parent.UploadDate ? <span className="version-date"> - {parent.UploadDate}</span> : null}
                       <div style={{ fontSize: '0.9rem', color: '#555', marginTop: 4 }}>
-                        Downloads: {parent.DownloadCount || 0} — Raised: ${Number(parent.TotalDonations || 0).toFixed(2)}
+                        Downloads: {parent.DownloadCount || 0} - Raised: ${Number(parent.TotalDonations || 0).toFixed(2)}
                       </div>
                       {(childrenByRoot[parent.ItemID] || []).map(child => (
                         <div key={child.ItemID} style={{ marginLeft: 18, marginTop: 8 }}>
                           <a className="version-link" href={`#/items/${child.ItemID}`} onClick={e => { e.preventDefault(); window.location.hash = `#/items/${child.ItemID}` }}>
                             <span className="version-label">{child.Title || `Item ${child.ItemID}`}</span>
                           </a>
-                          {child.UploadDate ? <span className="version-date"> — {child.UploadDate}</span> : null}
+                          {child.UploadDate ? <span className="version-date"> - {child.UploadDate}</span> : null}
                           <div style={{ fontSize: '0.9rem', color: '#555', marginTop: 4 }}>
-                            Downloads: {child.DownloadCount || 0} — Raised: ${Number(child.TotalDonations || 0).toFixed(2)}
+                            Downloads: {child.DownloadCount || 0} - Raised: ${Number(child.TotalDonations || 0).toFixed(2)}
                           </div>
                         </div>
                       ))}

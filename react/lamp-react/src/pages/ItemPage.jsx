@@ -337,7 +337,7 @@ function ItemPage ({ itemId }) {
 										>
 											<span className="version-label">{v.label || `Version ${v.id}`}</span>
 											{v.uploadDate ? (
-												<span className="version-date"> — {v.uploadDate}</span>
+												<span className="version-date"> - {v.uploadDate}</span>
 											) : null}
 										</a>
 									</li>

@@ -92,8 +92,8 @@ if ($memberId <= 0) {
 }
 
 if ($view === "received") {
-    $sql = "
-        SELECT 
+    $sql = 
+        "SELECT 
             s.PrimaryEmail AS PeerEmail,
             p.Message,
             p.Date,
@@ -101,11 +101,10 @@ if ($view === "received") {
         FROM PrivateMessage p
         LEFT JOIN Member s ON p.SenderID = s.MemberID
         WHERE p.ReceiverID = ?
-        ORDER BY p.Date DESC
-    ";
+        ORDER BY p.Date DESC";
 } else {
-    $sql = "
-        SELECT 
+    $sql =
+        "SELECT 
             r.PrimaryEmail AS PeerEmail,
             p.Message,
             p.Date,
@@ -113,8 +112,7 @@ if ($view === "received") {
         FROM PrivateMessage p
         LEFT JOIN Member r ON p.ReceiverID = r.MemberID
         WHERE p.SenderID = ?
-        ORDER BY p.Date DESC
-    ";
+        ORDER BY p.Date DESC";
 }
 
 $stmt = $mysqli->prepare($sql);

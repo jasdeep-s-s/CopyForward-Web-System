@@ -36,8 +36,8 @@ try {
         exit;
     }
 
-    $check = $mysqli->prepare("
-        SELECT MemberID 
+    $check = $mysqli->prepare(
+        "SELECT MemberID 
         FROM Member 
         WHERE ORCID = ? 
         LIMIT 1"

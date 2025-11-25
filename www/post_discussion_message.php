@@ -33,7 +33,8 @@ try {
         exit;
     }
 
-    $stmt = $mysqli->prepare("INSERT INTO DiscussionMessage (DiscussionID, SenderID, Message, Date) VALUES (?, ?, ?, NOW())");
+    $stmt = $mysqli->prepare("INSERT INTO DiscussionMessage (DiscussionID, SenderID, Message, Date) 
+        VALUES (?, ?, ?, NOW())");
     if (!$stmt) throw new Exception($mysqli->error);
     $stmt->bind_param('iis', $discussionId, $senderId, $message);
     $ok = $stmt->execute();

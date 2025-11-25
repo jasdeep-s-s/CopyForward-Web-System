@@ -85,10 +85,9 @@ if (!$stmt->fetch()) {
 }
 $stmt->close();
 
-$sql = "
-    INSERT INTO PrivateMessage (SenderID, ReceiverID, Date, Message)
-    VALUES (?, ?, NOW(), ?)
-";
+$sql =
+    "INSERT INTO PrivateMessage (SenderID, ReceiverID, Date, Message)
+    VALUES (?, ?, NOW(), ?)";
 
 $stmt = $mysqli->prepare($sql);
 

@@ -58,7 +58,8 @@ if ($stmt->fetch()) {
 }
 $stmt->close();
 
-$sql = "INSERT INTO Member (Role, Name, Username, Organization, AddressID, PrimaryEmail, RecoveryEmail, Password, ORCID, Blacklisted, Pseudo) VALUES ('Regular', 'TBD', 'TBD', NULL, NULL, ?, NULL, 'TBD', NULL, FALSE, NULL)";
+$sql = "INSERT INTO Member (Role, Name, Username, Organization, AddressID, PrimaryEmail, RecoveryEmail, Password, ORCID, Blacklisted, Pseudo)
+    VALUES ('Regular', 'TBD', 'TBD', NULL, NULL, ?, NULL, 'TBD', NULL, FALSE, NULL)";
 $stmt = $mysqli->prepare($sql);
 if (!$stmt) {
     echo json_encode(["success" => false, "step" => "prepare_insert", "sql" => $sql, "error" => $mysqli->error]);

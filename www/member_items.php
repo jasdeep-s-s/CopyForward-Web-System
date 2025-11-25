@@ -30,15 +30,14 @@ $sql = "SELECT
     i.ParentTitleID,
     COALESCE(d.DownloadCount, 0) AS DownloadCount,
     COALESCE(don.TotalDonations, 0) AS TotalDonations
-FROM Item i
-LEFT JOIN (
-    SELECT ItemID, COUNT(*) AS DownloadCount FROM Download GROUP BY ItemID
-) d ON i.ItemID = d.ItemID
-LEFT JOIN (
-    SELECT ItemID, SUM(Amount) AS TotalDonations FROM Donation GROUP BY ItemID
-) don ON i.ItemID = don.ItemID
-WHERE i.AuthorID = ?
-    AND i.Status NOT IN ('Removed', 'Under Review (Upload)')";
+    FROM Item i
+    LEFT JOIN (
+        SELECT ItemID, COUNT(*) AS DownloadCount FROM Download GROUP BY ItemID
+    ) d ON i.ItemID = d.ItemID
+    LEFT JOIN (
+        SELECT ItemID, SUM(Amount) AS TotalDonations FROM Donation GROUP BY ItemID
+    ) don ON i.ItemID = don.ItemID
+    WHERE i.AuthorID = ? AND i.Status NOT IN ('Removed', 'Under Review (Upload)')";
 
 $stmt = $mysqli->prepare($sql);
 if (!$stmt) {
@@ -56,7 +55,6 @@ if (!$stmt->execute()) {
 $res = $stmt->get_result();
 $rows = [];
 while ($r = $res->fetch_assoc()) {
-    // ensure numeric types
     $r['DownloadCount'] = isset($r['DownloadCount']) ? intval($r['DownloadCount']) : 0;
     $r['TotalDonations'] = isset($r['TotalDonations']) ? floatval($r['TotalDonations']) : 0.0;
     $r['ParentTitleID'] = isset($r['ParentTitleID']) && $r['ParentTitleID'] !== null ? (int)$r['ParentTitleID'] : null;

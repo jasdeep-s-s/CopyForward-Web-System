@@ -31,7 +31,12 @@ try {
         exit;
     }
 
-    $check = $mysqli->prepare("SELECT DiscussionID FROM Discussion d WHERE d.CommitteeID = 2 AND d.ItemID = ? AND d.Status = 'Open' LIMIT 1");
+    $check = $mysqli->prepare(
+        "SELECT DiscussionID 
+        FROM Discussion d 
+        WHERE d.CommitteeID = 2 AND d.ItemID = ? AND d.Status = 'Open' 
+        LIMIT 1"
+    );
     if (!$check) throw new Exception($mysqli->error);
     $check->bind_param('i', $itemId);
     $check->execute();
@@ -42,7 +47,13 @@ try {
         exit;
     }
 
-    $authCheck = $mysqli->prepare("SELECT i.ItemID FROM Item i LEFT JOIN Member m ON i.AuthorID = m.ORCID WHERE i.ItemID = ? AND m.MemberID = ? LIMIT 1");
+    $authCheck = $mysqli->prepare(
+        "SELECT i.ItemID 
+        FROM Item i 
+        LEFT JOIN Member m ON i.AuthorID = m.ORCID 
+        WHERE i.ItemID = ? AND m.MemberID = ? 
+        LIMIT 1"
+    );
     if (!$authCheck) throw new Exception($mysqli->error);
     $authCheck->bind_param('ii', $itemId, $memberId);
     $authCheck->execute();

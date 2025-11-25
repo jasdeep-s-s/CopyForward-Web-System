@@ -28,7 +28,10 @@ if ($id <= 0) {
     exit;
 }
 
-$sql = "SELECT MemberID, Role, Name, Username, Organization, PrimaryEmail, ORCID FROM Member WHERE MemberID = ? LIMIT 1";
+$sql = "SELECT MemberID, Role, Name, Username, Organization, PrimaryEmail, ORCID 
+    FROM Member 
+    WHERE MemberID = ? 
+    LIMIT 1";
 $stmt = $mysqli->prepare($sql);
 if (!$stmt) {
     echo json_encode(["success" => false, "step" => "prepare", "sql" => $sql, "error" => $mysqli->error]);
