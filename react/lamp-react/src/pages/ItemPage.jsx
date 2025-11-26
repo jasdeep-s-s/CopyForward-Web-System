@@ -9,6 +9,7 @@ function ItemPage ({ itemId }) {
 	const [privateReply, setPrivateReply] = useState(false)
 	const [canDownload, setCanDownload] = useState(null)
 	const [downloadInfo, setDownloadInfo] = useState(null)
+	const [hasActivePlagiarismDebate, setHasActivePlagiarismDebate] = useState(false)
 
 	useEffect(() => {
 		let cancelled = false
@@ -87,6 +88,14 @@ function ItemPage ({ itemId }) {
 				}
 
 				if (!cancelled) setItem(itemData)
+
+				try {
+					const aRes = await fetch(`/active_plagiarism_debate.php?item=${encodeURIComponent(itemId)}`)
+					if (aRes.ok) {
+						const aj = await aRes.json()
+						if (!cancelled && aj && aj.success) setHasActivePlagiarismDebate(!!aj.active)
+					}
+				} catch (err) {}
 			} catch (err) {
 				console.error('Item fetch error:', err)
 			}
@@ -146,6 +155,32 @@ function ItemPage ({ itemId }) {
 		})
 	}
 
+	async function handleAppeal() {
+		const logged = localStorage.getItem('logged_in_id')
+		if (!logged) { alert('You must be signed in to appeal.'); return }
+		const ok = window.confirm('Submit an appeal to the appeals committee?')
+		if (!ok) return
+
+		try {
+			const res = await fetch('/appeal_item.php', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ memberId: Number(logged), itemId: Number(item.id) })
+			})
+			const j = await res.json()
+			if (j && j.success) {
+				alert('Appeal submitted' + (j.discussionId ? ` (discussion ${j.discussionId})` : ''))
+			} else {
+				if (j && j.error === 'not_author') alert('Appeal not allowed: you are not verified as the author.')
+				else if (j && j.error) alert('Failed to submit appeal: ' + j.error)
+				else alert('Failed to submit appeal')
+			}
+		} catch (err) {
+			console.error('appeal error', err)
+			alert('Network error while submitting appeal')
+		}
+	}
+
 	function handleDownload() {
 		const logged = localStorage.getItem('logged_in_id')
 		if (!logged) {
@@ -181,7 +216,7 @@ function ItemPage ({ itemId }) {
 	async function handleReport () {
 		const logged = localStorage.getItem('logged_in_id')
 		if (!logged) { alert('You must be signed in to report an item.'); return }
-		const ok = window.confirm('Report this item for plagiarism? This will notify the plagiarism committee.')
+		const ok = window.confirm('Report this item for plagiarism?')
 		if (!ok) return
 
 		try {
@@ -213,32 +248,6 @@ function ItemPage ({ itemId }) {
 	if (item.status === 'Removed') {
 			const loggedId = localStorage.getItem('logged_in_id')
 			const isAuthor = loggedId && item.authorMemberId && Number(loggedId) === Number(item.authorMemberId)
-
-			async function handleAppeal () {
-				const logged = localStorage.getItem('logged_in_id')
-				if (!logged) { alert('You must be signed in to appeal.'); return }
-				const ok = window.confirm('Submit an appeal to the appeals committee? This will notify the appeals committee.')
-				if (!ok) return
-
-				try {
-					const res = await fetch('/appeal_item.php', {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({ memberId: Number(logged), itemId: Number(item.id) })
-					})
-					const j = await res.json()
-					if (j && j.success) {
-						alert('Appeal submitted' + (j.discussionId ? ` (discussion ${j.discussionId})` : ''))
-					} else {
-						if (j && j.error === 'not_author') alert('Appeal not allowed: you are not verified as the author.')
-						else if (j && j.error) alert('Failed to submit appeal: ' + j.error)
-						else alert('Failed to submit appeal')
-					}
-				} catch (err) {
-					console.error('appeal error', err)
-					alert('Network error while submitting appeal')
-				}
-			}
 
 			return (
 				<div className="item-page">
@@ -351,6 +360,9 @@ function ItemPage ({ itemId }) {
 							alert('Network error while deleting item')
 						}
 					}}>Delete</button>
+				) : null}
+				{localStorage.getItem('logged_in_id') && item.authorMemberId && Number(localStorage.getItem('logged_in_id')) === Number(item.authorMemberId) && hasActivePlagiarismDebate ? (
+					<button className="btn" onClick={handleAppeal}>Appeal</button>
 				) : null}
 				<button className="btn report" onClick={handleReport}>Report</button>
 			</div>
