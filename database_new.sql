@@ -99,6 +99,7 @@ CREATE TABLE MemberCommittee (
   MemberCommitteeID INT PRIMARY KEY AUTO_INCREMENT,
   MemberID INT NOT NULL,
   CommitteeID INT NOT NULL,
+  Approved TINYINT(1) NOT NULL DEFAULT 0,
   FOREIGN KEY (MemberID) REFERENCES Member(MemberID),
   FOREIGN KEY (CommitteeID) REFERENCES Committee(CommitteeID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

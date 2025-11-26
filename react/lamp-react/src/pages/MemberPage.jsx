@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import './ItemPage.css'
+import MessagePopup from './MessagePopup'
 
 function getMemberIdFromHash() {
   const h = window.location.hash || ''
@@ -17,6 +18,9 @@ function MemberPage ({ memberId: propMemberId }) {
   const [downloads, setDownloads] = useState([])
   const [contributions, setContributions] = useState([])
   const [committees, setCommittees] = useState([])
+  const [showJoinPopup, setShowJoinPopup] = useState(false)
+  const [allCommittees, setAllCommittees] = useState([])
+  const [requestedIds, setRequestedIds] = useState([])
 
   useEffect(() => {
     function onHash() {
@@ -167,7 +171,7 @@ function MemberPage ({ memberId: propMemberId }) {
         <section className="versions" style={{ marginTop: 20 }}>
           <h2>Committees</h2>
           <div style={{ marginTop: 8 }}>
-            {committees.length ? (
+              {committees.length ? (
               <ul className="versions-list">
                 {committees.map((c, idx) => (
                   <li key={idx}>
@@ -178,6 +182,23 @@ function MemberPage ({ memberId: propMemberId }) {
             ) : (
               <div className="empty">No committees</div>
             )}
+              {isOwn ? (
+                <div style={{ marginTop: 8 }}>
+                  <button className="btn" onClick={async () => {
+                    setShowJoinPopup(true)
+                    try {
+                      const res = await fetch('/committees.php')
+                      if (res.ok) {
+                        const json = await res.json()
+                        setAllCommittees(Array.isArray(json) ? json : [])
+                      }
+                    } catch (e) {
+                      console.error('failed to load committees', e)
+                      setAllCommittees([])
+                    }
+                  }}>Request to Join a Committee</button>
+                </div>
+              ) : null}
           </div>
         </section>
 
@@ -327,6 +348,64 @@ function MemberPage ({ memberId: propMemberId }) {
       ) : null}
 
       {!member && !loading && !error ? <div>Select a member or open a member URL like #/member/123</div> : null}
+
+      {showJoinPopup ? (
+        <MessagePopup onClose={() => setShowJoinPopup(false)}>
+          <div>
+            <h2>Request to Join a Committee</h2>
+            <div style={{ marginTop: 8 }}>
+              {allCommittees.length ? (
+                <ul className="versions-list">
+                  {allCommittees.map((c) => {
+                    const already = committees.some(mc => (mc.CommitteeName || '').toLowerCase() === (c.Name || '').toLowerCase())
+                    const requested = requestedIds.includes(Number(c.CommitteeID))
+                    return (
+                      <li key={c.CommitteeID} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ maxWidth: '75%' }}>
+                          <div style={{ fontWeight: 700 }}>{c.Name}</div>
+                          {c.Description ? <div style={{ fontSize: '0.9rem', color: '#555' }}>{c.Description}</div> : null}
+                        </div>
+                        <div>
+                          {already ? (
+                            <button className="btn" disabled>Member</button>
+                          ) : requested ? (
+                            <button className="btn" disabled>Requested</button>
+                          ) : (
+                            <button className="btn" onClick={async () => {
+                              const logged = localStorage.getItem('logged_in_id')
+                              if (!logged) { alert('Please sign in to request committee membership'); return }
+                              try {
+                                const res = await fetch('/request_join_committee.php', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ memberId: Number(logged), committeeId: Number(c.CommitteeID) })
+                                })
+                                const j = await res.json()
+                                if (j && j.success) {
+                                  setRequestedIds(prev => Array.from(new Set([...prev, Number(c.CommitteeID)])))
+                                  alert('Request submitted')
+                                } else {
+                                  if (j && j.error) alert('Failed to request: ' + j.error)
+                                  else alert('Failed to request')
+                                }
+                              } catch (err) {
+                                console.error('request join error', err)
+                                alert('Network error while requesting membership')
+                              }
+                            }}>Request</button>
+                          )}
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              ) : (
+                <div className="empty">No committees available</div>
+              )}
+            </div>
+          </div>
+        </MessagePopup>
+      ) : null}
     </div>
   )
 }
