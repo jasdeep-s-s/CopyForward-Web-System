@@ -33,7 +33,7 @@ CREATE TABLE Item (
   ApprovedBy INT,
   Topic VARCHAR(256),
   Type ENUM('Thesis','Article','Monograph & Book','Monograph Chapter','Conference Paper','Non-Thesis Graduate Project','Dataset'),
-  Status ENUM('Under Review (Upload)','Available','Under Review (Plagiarism)','Removed'),
+  Status ENUM('Under Review (Upload)','Available','Under Review (Plagiarism)','Removed', 'Deleted (Author)'),
   ParentTitleID INT,
   Content VARCHAR(5000),
   UpdatedAt DATETIME,

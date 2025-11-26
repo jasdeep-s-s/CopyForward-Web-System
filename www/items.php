@@ -62,7 +62,7 @@ $sql = "SELECT
             (SELECT COALESCE(SUM(Amount), 0) FROM Donation don WHERE don.ItemID = i.ItemID) AS TotalDonations
         FROM Item i
         LEFT JOIN Member m ON i.AuthorID = m.ORCID
-        WHERE i.Status NOT IN ('Removed', 'Under Review (Upload)')";
+        WHERE i.Status NOT IN ('Removed', 'Under Review (Upload)', 'Deleted (Author)')";
 
 if ($where) {
     $sql .= ' AND ' . implode(' AND ', $where);

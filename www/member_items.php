@@ -37,7 +37,7 @@ $sql = "SELECT
     LEFT JOIN (
         SELECT ItemID, SUM(Amount) AS TotalDonations FROM Donation GROUP BY ItemID
     ) don ON i.ItemID = don.ItemID
-    WHERE i.AuthorID = ? AND i.Status NOT IN ('Removed', 'Under Review (Upload)')";
+    WHERE i.AuthorID = ? AND i.Status NOT IN ('Removed', 'Under Review (Upload)', 'Deleted (Author)')";
 
 $stmt = $mysqli->prepare($sql);
 if (!$stmt) {

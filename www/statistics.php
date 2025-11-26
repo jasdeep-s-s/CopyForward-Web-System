@@ -24,9 +24,9 @@ try {
         $sql = "SELECT i.Type, COUNT(i.ItemID) AS ItemCount, (COUNT(i.ItemID) * 100.0 / 
                 (SELECT COUNT(*) 
                 FROM Item 
-                WHERE Status NOT IN ('Removed','Under Review (Upload)'))) AS ItemPercentage
+                WHERE Status NOT IN ('Removed','Under Review (Upload)', 'Deleted (Author)'))) AS ItemPercentage
             FROM Item i
-            WHERE i.Status NOT IN ('Removed','Under Review (Upload)')
+            WHERE i.Status NOT IN ('Removed','Under Review (Upload)', 'Deleted (Author)')
             GROUP BY i.Type";
 
         $res = $mysqli->query($sql);
@@ -47,7 +47,7 @@ try {
         $sql = "SELECT i.Type, COUNT(d.ItemID) AS DownloadCount
             FROM Item i
             LEFT JOIN Download d ON i.ItemID = d.ItemID
-            WHERE i.Status NOT IN ('Removed','Under Review (Upload)')
+            WHERE i.Status NOT IN ('Removed','Under Review (Upload)', 'Deleted (Author)')
             GROUP BY i.Type";
 
         $res = $mysqli->query($sql);
@@ -69,7 +69,7 @@ try {
                         LEFT JOIN Download d ON i.ItemID = d.ItemID
                         LEFT JOIN Member m ON m.MemberID = d.DownloaderID
                         LEFT JOIN Address a ON m.AddressID = a.AddressID
-                        WHERE i.Status NOT IN ('Removed','Under Review (Upload)') AND a.Country IS NOT NULL
+                        WHERE i.Status NOT IN ('Removed','Under Review (Upload)', 'Deleted (Author)') AND a.Country IS NOT NULL
                         GROUP BY a.Country";
 
         $res = $mysqli->query($sql);
@@ -90,7 +90,7 @@ try {
               FROM Item i
               LEFT JOIN Download d ON i.ItemID = d.ItemID
               LEFT JOIN Member a ON i.AuthorID = a.ORCID
-              WHERE i.Status NOT IN ('Removed','Under Review (Upload)')
+              WHERE i.Status NOT IN ('Removed','Under Review (Upload)', 'Deleted (Author)')
               GROUP BY a.Name, a.Organization
               ORDER BY DownloadCount DESC";
 
@@ -113,7 +113,7 @@ try {
             FROM Item i
             LEFT JOIN Download d ON i.ItemID = d.ItemID
             LEFT JOIN Member a ON i.AuthorID = a.ORCID
-            WHERE i.Status NOT IN ('Removed','Under Review (Upload)')
+            WHERE i.Status NOT IN ('Removed','Under Review (Upload)', 'Deleted (Author)')
             GROUP BY i.ItemID, i.Title, a.Name, i.Type
             ORDER BY DownloadCount DESC
             LIMIT 10";
@@ -141,15 +141,15 @@ try {
     $totals['totalMembers'] = $q ? intval($q->fetch_assoc()['c']) : 0;
 
     // total items excluding removed or under-review uploads
-    $q = $mysqli->query("SELECT COUNT(*) AS c FROM Item WHERE Status NOT IN ('Removed','Under Review (Upload)')");
+    $q = $mysqli->query("SELECT COUNT(*) AS c FROM Item WHERE Status NOT IN ('Removed','Under Review (Upload)', 'Deleted (Author)')");
     $totals['totalItems'] = $q ? intval($q->fetch_assoc()['c']) : 0;
 
     // total downloads for items that are not removed / under review
-    $q = $mysqli->query("SELECT COUNT(d.ItemID) AS c FROM Download d JOIN Item i ON d.ItemID = i.ItemID WHERE i.Status NOT IN ('Removed','Under Review (Upload)')");
+    $q = $mysqli->query("SELECT COUNT(d.ItemID) AS c FROM Download d JOIN Item i ON d.ItemID = i.ItemID WHERE i.Status NOT IN ('Removed','Under Review (Upload)', 'Deleted (Author)')");
     $totals['totalDownloads'] = $q ? intval($q->fetch_assoc()['c']) : 0;
 
     // total donations for items that are not removed / under review
-    $q = $mysqli->query("SELECT COALESCE(SUM(don.Amount),0) AS s FROM Donation don JOIN Item i2 ON don.ItemID = i2.ItemID WHERE i2.Status NOT IN ('Removed','Under Review (Upload)')");
+    $q = $mysqli->query("SELECT COALESCE(SUM(don.Amount),0) AS s FROM Donation don JOIN Item i2 ON don.ItemID = i2.ItemID WHERE i2.Status NOT IN ('Removed','Under Review (Upload)', 'Deleted (Author)')");
     $totals['totalDonations'] = $q ? floatval($q->fetch_assoc()['s']) : 0.0;
 
     echo json_encode($totals);

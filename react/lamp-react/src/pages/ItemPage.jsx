@@ -275,6 +275,16 @@ function ItemPage ({ itemId }) {
 		)
 	}
 
+	if (item.status === 'Deleted (Author)') {
+		return (
+			<div className="item-page">
+				<header className="item-header">
+					<h1 className="item-title">This item has been deleted by the author.</h1>
+				</header>
+			</div>
+		)
+	}
+
 	return (
 		<div className="item-page">
 			<header className="item-header">
@@ -316,6 +326,31 @@ function ItemPage ({ itemId }) {
 				) : null}
 				{localStorage.getItem('logged_in_id') ? (
 					<button className="btn" onClick={() => { window.location.hash = `#/items/${item.id}/discussions` }}>Discussions</button>
+				) : null}
+				{localStorage.getItem('logged_in_id') && item.authorMemberId && Number(localStorage.getItem('logged_in_id')) === Number(item.authorMemberId) ? (
+					<button className="btn delete" onClick={async () => {
+						const ok = window.confirm('Delete this item?.')
+						if (!ok) return
+						const logged = Number(localStorage.getItem('logged_in_id'))
+						try {
+							const res = await fetch('/delete_item.php', {
+								method: 'POST',
+								headers: { 'Content-Type': 'application/json' },
+								body: JSON.stringify({ memberId: logged, itemId: Number(item.id) })
+							})
+							const j = await res.json()
+							if (j && j.success) {
+								setItem(prev => ({ ...prev, status: 'Deleted (Author)' }))
+								alert('Item marked Deleted')
+							} else {
+								if (j && j.error) alert('Failed to delete item: ' + j.error)
+								else alert('Failed to delete item')
+							}
+						} catch (err) {
+							console.error('delete item error', err)
+							alert('Network error while deleting item')
+						}
+					}}>Delete</button>
 				) : null}
 				<button className="btn report" onClick={handleReport}>Report</button>
 			</div>
