@@ -27,7 +27,12 @@ try {
         exit;
     }
 
-    $check = $mysqli->prepare("SELECT Approved FROM MemberCommittee WHERE MemberID = ? AND CommitteeID = ? LIMIT 1");
+    $check = $mysqli->prepare(
+        "SELECT Approved 
+        FROM MemberCommittee 
+        WHERE MemberID = ? AND CommitteeID = ? 
+        LIMIT 1"
+    );
     if (!$check) throw new Exception($mysqli->error);
     $check->bind_param('ii', $memberId, $committeeId);
     $check->execute();
@@ -37,7 +42,10 @@ try {
         exit;
     }
 
-    $ins = $mysqli->prepare("INSERT INTO MemberCommittee (MemberID, CommitteeID, Approved) VALUES (?, ?, 0)");
+    $ins = $mysqli->prepare(
+        "INSERT INTO MemberCommittee (MemberID, CommitteeID, Approved) 
+        VALUES (?, ?, 0)"
+    );
     if (!$ins) throw new Exception($mysqli->error);
     $ins->bind_param('ii', $memberId, $committeeId);
     if (!$ins->execute()) throw new Exception($ins->error);

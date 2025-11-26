@@ -27,7 +27,7 @@ try {
         "SELECT c.Name AS CommitteeName
          FROM MemberCommittee mc
          LEFT JOIN Committee c ON mc.CommitteeID = c.CommitteeID
-         WHERE mc.MemberID = ?"
+         WHERE mc.MemberID = ? AND mc.Approved = 1"
     );
     if (!$stmt) throw new Exception($mysqli->error);
     $stmt->bind_param('i', $member);

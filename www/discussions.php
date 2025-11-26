@@ -30,10 +30,10 @@ try {
         FROM Discussion d
         LEFT JOIN Committee c ON d.CommitteeID = c.CommitteeID
         LEFT JOIN MemberCommittee mc ON c.CommitteeID = mc.CommitteeID
-        WHERE d.ItemID = ? AND (
-        (c.CommitteeID = 2 AND mc.MemberID = ?) OR
-        (c.CommitteeID = 1 AND EXISTS(SELECT 1 FROM `Download` dd WHERE dd.DownloaderID = ? AND dd.ItemID = ?)) OR
-        (c.CommitteeID NOT IN (1,2) AND mc.MemberID = ?))";
+        WHERE d.ItemID = ? AND
+        ((c.CommitteeID = 2 AND mc.MemberID = ? AND mc.Approved = 1) OR
+        (c.CommitteeID = 1 AND EXISTS(SELECT 1 FROM `Download` dd WHERE dd.DownloaderID = ? AND dd.ItemID = ?) OR (c.CommitteeID = 1 AND mc.MemberID = ? AND mc.Approved = 1)) OR
+        (c.CommitteeID NOT IN (1,2) AND mc.MemberID = ? AND mc.Approved = 1))";
 
     $stmt = $mysqli->prepare($sql);
     if (!$stmt) throw new Exception($mysqli->error);

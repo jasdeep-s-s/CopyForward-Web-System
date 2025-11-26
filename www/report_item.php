@@ -34,7 +34,7 @@ try {
     $stmt = $mysqli->prepare(
         "SELECT 1 
         FROM MemberCommittee mc 
-        WHERE mc.MemberID = ? AND mc.CommitteeID = 1 
+        WHERE mc.MemberID = ? AND mc.CommitteeID = 1 AND mc.Approved = 1
         LIMIT 1"
     );
     if (!$stmt) throw new Exception($mysqli->error);
