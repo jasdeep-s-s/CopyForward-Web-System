@@ -17,27 +17,25 @@ if ($mysqli->connect_errno) {
 }
 
 try {
-    $discussion = isset($_GET['discussion']) ? intval($_GET['discussion']) : 0;
-    if (!$discussion) {
-        echo json_encode(["success" => false, "error" => "missing_discussion"]);
+    $itemId = isset($_GET['item']) ? intval($_GET['item']) : 0;
+    if (!$itemId) {
+        echo json_encode(["success" => false, "error" => "missing_item"]);
         exit;
     }
 
     $stmt = $mysqli->prepare(
-        "SELECT Subject 
-        FROM Discussion 
-        WHERE DiscussionID = ? 
+        "SELECT 1 
+        FROM Discussion d 
+        WHERE d.ItemID = ? AND d.CommitteeID = 1 AND d.VoteActive = 1 
         LIMIT 1"
     );
     if (!$stmt) throw new Exception($mysqli->error);
-    $stmt->bind_param('i', $discussion);
+    $stmt->bind_param('i', $itemId);
     $stmt->execute();
     $res = $stmt->get_result();
-    if ($row = $res->fetch_assoc()) {
-        echo json_encode(["success" => true, "Subject" => $row['Subject']]);
-    } else {
-        echo json_encode(["success" => false, "error" => "not_found"]);
-    }
+    $exists = $res && $res->fetch_assoc() ? true : false;
+
+    echo json_encode(["success" => true, "active" => $exists]);
 } catch (Exception $ex) {
     echo json_encode(["success" => false, "error" => $ex->getMessage()]);
 } finally {

@@ -38,13 +38,15 @@ if ($itemId <= 0 || $commentorId <= 0 || $comment === '') {
 $now = date('Y-m-d H:i:s');
 try {
     if ($parentId > 0) {
-        $sql = "INSERT INTO Comment (ItemID, CommentorID, Comment, Date, ParentCommentID, private) VALUES (?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO Comment (ItemID, CommentorID, Comment, Date, ParentCommentID, private) 
+            VALUES (?, ?, ?, ?, ?, ?)";
         $stmt = $mysqli->prepare($sql);
         if (!$stmt) throw new Exception($mysqli->error);
         $privateInt = $private ? 1 : 0;
         $stmt->bind_param('iissii', $itemId, $commentorId, $comment, $now, $parentId, $privateInt);
     } else {
-        $sql = "INSERT INTO Comment (ItemID, CommentorID, Comment, Date, private) VALUES (?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO Comment (ItemID, CommentorID, Comment, Date, private) 
+            VALUES (?, ?, ?, ?, ?)";
         $stmt = $mysqli->prepare($sql);
         if (!$stmt) throw new Exception($mysqli->error);
         $privateInt = $private ? 1 : 0;

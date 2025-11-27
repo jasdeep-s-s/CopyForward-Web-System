@@ -17,27 +17,18 @@ if ($mysqli->connect_errno) {
 }
 
 try {
-    $discussion = isset($_GET['discussion']) ? intval($_GET['discussion']) : 0;
-    if (!$discussion) {
-        echo json_encode(["success" => false, "error" => "missing_discussion"]);
-        exit;
-    }
-
     $stmt = $mysqli->prepare(
-        "SELECT Subject 
-        FROM Discussion 
-        WHERE DiscussionID = ? 
-        LIMIT 1"
-    );
+        "SELECT CommitteeID, Name, Description 
+        FROM Committee 
+        ORDER BY Name ASC");
     if (!$stmt) throw new Exception($mysqli->error);
-    $stmt->bind_param('i', $discussion);
     $stmt->execute();
     $res = $stmt->get_result();
-    if ($row = $res->fetch_assoc()) {
-        echo json_encode(["success" => true, "Subject" => $row['Subject']]);
-    } else {
-        echo json_encode(["success" => false, "error" => "not_found"]);
+    $out = [];
+    while ($row = $res->fetch_assoc()) {
+        $out[] = $row;
     }
+    echo json_encode($out);
 } catch (Exception $ex) {
     echo json_encode(["success" => false, "error" => $ex->getMessage()]);
 } finally {

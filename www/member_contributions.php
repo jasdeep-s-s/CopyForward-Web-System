@@ -17,27 +17,28 @@ if ($mysqli->connect_errno) {
 }
 
 try {
-    $discussion = isset($_GET['discussion']) ? intval($_GET['discussion']) : 0;
-    if (!$discussion) {
-        echo json_encode(["success" => false, "error" => "missing_discussion"]);
+    $member = isset($_GET['member']) ? intval($_GET['member']) : 0;
+    if (!$member) {
+        echo json_encode(["success" => false, "error" => "missing_member"]);
         exit;
     }
 
     $stmt = $mysqli->prepare(
-        "SELECT Subject 
-        FROM Discussion 
-        WHERE DiscussionID = ? 
-        LIMIT 1"
+        "SELECT i.Title AS ItemTitle, d.Amount AS Amount, d.Date AS DonationDate
+         FROM Donation d
+         LEFT JOIN Item i ON d.ItemID = i.ItemID
+         WHERE d.DonatorID = ?
+         ORDER BY d.Date DESC"
     );
     if (!$stmt) throw new Exception($mysqli->error);
-    $stmt->bind_param('i', $discussion);
+    $stmt->bind_param('i', $member);
     $stmt->execute();
     $res = $stmt->get_result();
-    if ($row = $res->fetch_assoc()) {
-        echo json_encode(["success" => true, "Subject" => $row['Subject']]);
-    } else {
-        echo json_encode(["success" => false, "error" => "not_found"]);
+    $out = [];
+    while ($row = $res->fetch_assoc()) {
+        $out[] = $row;
     }
+    echo json_encode($out);
 } catch (Exception $ex) {
     echo json_encode(["success" => false, "error" => $ex->getMessage()]);
 } finally {

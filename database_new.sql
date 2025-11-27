@@ -33,7 +33,7 @@ CREATE TABLE Item (
   ApprovedBy INT,
   Topic VARCHAR(256),
   Type ENUM('Thesis','Article','Monograph & Book','Monograph Chapter','Conference Paper','Non-Thesis Graduate Project','Dataset'),
-  Status ENUM('Under Review (Upload)','Available','Under Review (Plagiarism)','Removed'),
+  Status ENUM('Under Review (Upload)','Available','Under Review (Plagiarism)','Removed', 'Deleted (Author)'),
   ParentTitleID INT,
   Content VARCHAR(5000),
   UpdatedAt DATETIME,
@@ -99,6 +99,7 @@ CREATE TABLE MemberCommittee (
   MemberCommitteeID INT PRIMARY KEY AUTO_INCREMENT,
   MemberID INT NOT NULL,
   CommitteeID INT NOT NULL,
+  Approved TINYINT(1) NOT NULL DEFAULT 0,
   FOREIGN KEY (MemberID) REFERENCES Member(MemberID),
   FOREIGN KEY (CommitteeID) REFERENCES Committee(CommitteeID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -153,3 +154,112 @@ CREATE TABLE MFAMatrix (
   Matrix CHAR(25),
   FOREIGN KEY (UserID) REFERENCES Member(MemberID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DELIMITER $$
+CREATE PROCEDURE process_due_plagiarism_vote()
+BEGIN
+  DECLARE done INT DEFAULT 0;
+  DECLARE d_id INT;
+  DECLARE d_item INT;
+  DECLARE author_orcid CHAR(19);
+  DECLARE author_member INT;
+  DECLARE removed_count INT;
+  DECLARE total_votes INT;
+  DECLARE yes_votes INT;
+
+  DECLARE cur CURSOR FOR
+    SELECT DiscussionID, ItemID FROM Discussion
+    WHERE CommitteeID = 1 AND VoteActive = TRUE AND VotingDeadline <= NOW();
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+  OPEN cur;
+  read_loop: LOOP
+    FETCH cur INTO d_id, d_item;
+    IF done THEN LEAVE read_loop; END IF;
+
+    SELECT COUNT(*) INTO total_votes FROM DiscussionVote WHERE DiscussionID = d_id;
+    SELECT COUNT(*) INTO yes_votes FROM DiscussionVote WHERE DiscussionID = d_id AND Vote = TRUE;
+
+    IF total_votes > 0 AND yes_votes * 3 >= total_votes * 2 THEN
+      UPDATE Item SET Status = 'Removed' WHERE ItemID = d_item;
+
+      SELECT AuthorID INTO author_orcid FROM Item WHERE ItemID = d_item;
+      SELECT MemberID INTO author_member FROM Member WHERE ORCID = author_orcid LIMIT 1;
+
+      IF author_member IS NOT NULL THEN
+        INSERT INTO PrivateMessage (SenderID, ReceiverID, Date, Message)
+          VALUES (NULL, author_member, NOW(),
+            CONCAT('Your item "', (SELECT IFNULL(Title, 'Untitled') FROM Item WHERE ItemID = d_item), '" has been removed following a plagiarism committee vote.'));
+      END IF;
+
+      SELECT COUNT(*) INTO removed_count FROM Item WHERE AuthorID = author_orcid AND Status = 'Removed';
+
+      IF removed_count >= 3 THEN
+        UPDATE Member SET Blacklisted = TRUE WHERE ORCID = author_orcid;
+        UPDATE Item SET Status = 'Removed' WHERE AuthorID = author_orcid;
+      ELSE
+        UPDATE Item
+        SET Status = 'Under Review (Plagiarism)'
+        WHERE AuthorID = author_orcid AND Status = 'Available' AND ItemID != d_item;
+      END IF;
+
+      UPDATE Discussion SET VoteActive = FALSE, Status = 'Blacklisted' WHERE DiscussionID = d_id;
+    ELSE
+      UPDATE Discussion SET VoteActive = FALSE, Status = 'Dismissed' WHERE DiscussionID = d_id;
+    END IF;
+  END LOOP;
+  CLOSE cur;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE PROCEDURE process_due_appeal_vote()
+BEGIN
+  DECLARE done INT DEFAULT 0;
+  DECLARE d_id INT;
+  DECLARE d_item INT;
+  DECLARE author_orcid CHAR(19);
+  DECLARE author_member INT;
+  DECLARE removed_count INT;
+  DECLARE total_votes INT;
+  DECLARE yes_votes INT;
+
+  DECLARE cur CURSOR FOR
+    SELECT DiscussionID, ItemID FROM Discussion
+    WHERE CommitteeID = 2 AND VoteActive = TRUE AND VotingDeadline <= NOW();
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+  OPEN cur;
+  read_loop: LOOP
+    FETCH cur INTO d_id, d_item;
+    IF done THEN LEAVE read_loop; END IF;
+
+    SELECT COUNT(*) INTO total_votes FROM DiscussionVote WHERE DiscussionID = d_id;
+    SELECT COUNT(*) INTO yes_votes FROM DiscussionVote WHERE DiscussionID = d_id AND Vote = TRUE;
+
+    IF total_votes > 0 AND yes_votes * 2 > total_votes THEN
+      UPDATE Item SET Status = 'Available' WHERE ItemID = d_item;
+
+      SELECT AuthorID INTO author_orcid FROM Item WHERE ItemID = d_item;
+      SELECT MemberID INTO author_member FROM Member WHERE ORCID = author_orcid LIMIT 1;
+
+      IF author_member IS NOT NULL THEN
+        INSERT INTO PrivateMessage (SenderID, ReceiverID, Date, Message)
+          VALUES (NULL, author_member, NOW(),
+            CONCAT('Your item "', (SELECT IFNULL(Title, 'Untitled') FROM Item WHERE ItemID = d_item), '" has been reinstated following an appeal committee vote.'));
+      END IF;
+
+      UPDATE Discussion SET VoteActive = FALSE, Status = 'Appeal' WHERE DiscussionID = d_id;
+    ELSE
+      UPDATE Discussion SET VoteActive = FALSE, Status = 'Dismissed' WHERE DiscussionID = d_id;
+    END IF;
+  END LOOP;
+  CLOSE cur;
+END$$
+DELIMITER ;
+
+CREATE EVENT IF NOT EXISTS process_discussions_event
+ON SCHEDULE EVERY 1 MINUTE
+DO
+  CALL process_due_plagiarism_vote();
+  CALL process_due_appeal_vote();

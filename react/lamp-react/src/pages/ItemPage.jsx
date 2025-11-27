@@ -9,6 +9,7 @@ function ItemPage ({ itemId }) {
 	const [privateReply, setPrivateReply] = useState(false)
 	const [canDownload, setCanDownload] = useState(null)
 	const [downloadInfo, setDownloadInfo] = useState(null)
+	const [hasActivePlagiarismDebate, setHasActivePlagiarismDebate] = useState(false)
 
 	useEffect(() => {
 		let cancelled = false
@@ -87,6 +88,14 @@ function ItemPage ({ itemId }) {
 				}
 
 				if (!cancelled) setItem(itemData)
+
+				try {
+					const aRes = await fetch(`/active_plagiarism_debate.php?item=${encodeURIComponent(itemId)}`)
+					if (aRes.ok) {
+						const aj = await aRes.json()
+						if (!cancelled && aj && aj.success) setHasActivePlagiarismDebate(!!aj.active)
+					}
+				} catch (err) {}
 			} catch (err) {
 				console.error('Item fetch error:', err)
 			}
@@ -146,6 +155,32 @@ function ItemPage ({ itemId }) {
 		})
 	}
 
+	async function handleAppeal() {
+		const logged = localStorage.getItem('logged_in_id')
+		if (!logged) { alert('You must be signed in to appeal.'); return }
+		const ok = window.confirm('Submit an appeal to the appeals committee?')
+		if (!ok) return
+
+		try {
+			const res = await fetch('/appeal_item.php', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ memberId: Number(logged), itemId: Number(item.id) })
+			})
+			const j = await res.json()
+			if (j && j.success) {
+				alert('Appeal submitted' + (j.discussionId ? ` (discussion ${j.discussionId})` : ''))
+			} else {
+				if (j && j.error === 'not_author') alert('Appeal not allowed: you are not verified as the author.')
+				else if (j && j.error) alert('Failed to submit appeal: ' + j.error)
+				else alert('Failed to submit appeal')
+			}
+		} catch (err) {
+			console.error('appeal error', err)
+			alert('Network error while submitting appeal')
+		}
+	}
+
 	function handleDownload() {
 		const logged = localStorage.getItem('logged_in_id')
 		if (!logged) {
@@ -173,16 +208,70 @@ function ItemPage ({ itemId }) {
 			})
 	}
 
+
+	const reportSuccess = (did) => {
+		alert('Report submitted' + (did ? ` (discussion ${did})` : ''))
+	}
+
+	async function handleReport () {
+		const logged = localStorage.getItem('logged_in_id')
+		if (!logged) { alert('You must be signed in to report an item.'); return }
+		const ok = window.confirm('Report this item for plagiarism?')
+		if (!ok) return
+
+		try {
+			const res = await fetch('/report_item.php', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ memberId: Number(logged), itemId: Number(item.id) })
+			})
+			const j = await res.json()
+			if (j && j.success) {
+				reportSuccess(j.discussionId)
+			} else {
+				if (j && j.error === 'not_allowed') {
+					console.debug('report suppressed: not_allowed')
+				} else if (j && j.error) {
+					alert('Failed to submit report: ' + j.error)
+				} else {
+					alert('Failed to submit report')
+				}
+			}
+		} catch (err) {
+			console.error('report error', err)
+			alert('Network error while submitting report')
+		}
+	}
+
 	if (!item) return <div className="item-page">Loading...</div>
 
 	if (item.status === 'Removed') {
-		return (
-			<div className="item-page">
-				<header className="item-header">
-					<h1 className="item-title">This item has been removed</h1>
-				</header>
-			</div>
-		)
+			const loggedId = localStorage.getItem('logged_in_id')
+			const isAuthor = loggedId && item.authorMemberId && Number(loggedId) === Number(item.authorMemberId)
+
+			return (
+				<div className="item-page">
+					<header className="item-header">
+						<h1 className="item-title">This item has been removed</h1>
+					</header>
+					<div style={{ padding: 12 }}>
+						{isAuthor ? (
+							<div>
+								<p>If you are the author and believe removal was incorrect, you may appeal to the appeals committee.</p>
+								<div style={{ display: 'flex', gap: 8 }}>
+									<button className="btn" onClick={handleAppeal}>Appeal</button>
+									<button className="btn" onClick={() => { window.location.hash = `#/items/${item.id}/discussions` }}>Discussions</button>
+								</div>
+							</div>
+						) : (
+							<div>
+								<p>This item has been removed.</p>
+								<button className="btn" onClick={() => { window.location.hash = `#/items/${item.id}/discussions` }}>Discussions</button>
+							</div>
+						)}
+					</div>
+				</div>
+			)
 	}
 
 	if (item.status === 'Under Review (Upload)') {
@@ -190,6 +279,16 @@ function ItemPage ({ itemId }) {
 			<div className="item-page">
 				<header className="item-header">
 					<h1 className="item-title">This item hasn't been approved by a moderator yet.</h1>
+				</header>
+			</div>
+		)
+	}
+
+	if (item.status === 'Deleted (Author)') {
+		return (
+			<div className="item-page">
+				<header className="item-header">
+					<h1 className="item-title">This item has been deleted by the author.</h1>
 				</header>
 			</div>
 		)
@@ -237,7 +336,35 @@ function ItemPage ({ itemId }) {
 				{localStorage.getItem('logged_in_id') ? (
 					<button className="btn" onClick={() => { window.location.hash = `#/items/${item.id}/discussions` }}>Discussions</button>
 				) : null}
-				<button className="btn report">Report</button>
+				{localStorage.getItem('logged_in_id') && item.authorMemberId && Number(localStorage.getItem('logged_in_id')) === Number(item.authorMemberId) ? (
+					<button className="btn delete" onClick={async () => {
+						const ok = window.confirm('Delete this item?.')
+						if (!ok) return
+						const logged = Number(localStorage.getItem('logged_in_id'))
+						try {
+							const res = await fetch('/delete_item.php', {
+								method: 'POST',
+								headers: { 'Content-Type': 'application/json' },
+								body: JSON.stringify({ memberId: logged, itemId: Number(item.id) })
+							})
+							const j = await res.json()
+							if (j && j.success) {
+								setItem(prev => ({ ...prev, status: 'Deleted (Author)' }))
+								alert('Item marked Deleted')
+							} else {
+								if (j && j.error) alert('Failed to delete item: ' + j.error)
+								else alert('Failed to delete item')
+							}
+						} catch (err) {
+							console.error('delete item error', err)
+							alert('Network error while deleting item')
+						}
+					}}>Delete</button>
+				) : null}
+				{localStorage.getItem('logged_in_id') && item.authorMemberId && Number(localStorage.getItem('logged_in_id')) === Number(item.authorMemberId) && hasActivePlagiarismDebate ? (
+					<button className="btn" onClick={handleAppeal}>Appeal</button>
+				) : null}
+				<button className="btn report" onClick={handleReport}>Report</button>
 			</div>
 
 			<section className="versions">
@@ -257,7 +384,7 @@ function ItemPage ({ itemId }) {
 										>
 											<span className="version-label">{v.label || `Version ${v.id}`}</span>
 											{v.uploadDate ? (
-												<span className="version-date"> — {v.uploadDate}</span>
+												<span className="version-date"> - {v.uploadDate}</span>
 											) : null}
 										</a>
 									</li>
