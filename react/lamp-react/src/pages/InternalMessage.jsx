@@ -1,3 +1,4 @@
+// by Pascal Ypperciel, 40210921
 import { useState, useEffect } from "react";
 
 function InternalMessage({ prefillTo, openCompose }) {
