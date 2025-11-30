@@ -6,7 +6,7 @@ header('Content-Type: application/json');
 
 if (!isset($_SESSION['member_id'])) { 
     http_response_code(401); 
-    echo json_encode(['authenticated'=>false]); .
+    echo json_encode(['authenticated'=>false]);
     exit; 
 }
 
