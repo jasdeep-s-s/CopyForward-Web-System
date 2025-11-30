@@ -59,15 +59,17 @@ if ($stmt->fetch()) {
 }
 $stmt->close();
 
+$placeholderUsername = 'ref_' . bin2hex(random_bytes(4));
+
 $sql = "INSERT INTO Member (Role, Name, Username, Organization, AddressID, PrimaryEmail, RecoveryEmail, Password, ORCID, Blacklisted)
-    VALUES ('Regular', 'TBD', 'TBD', NULL, NULL, ?, NULL, 'TBD', NULL, FALSE)";
+    VALUES ('Regular', 'TBD', ?, NULL, NULL, ?, NULL, 'TBD', NULL, FALSE)";
 $stmt = $mysqli->prepare($sql);
 if (!$stmt) {
     echo json_encode(["success" => false, "step" => "prepare_insert", "sql" => $sql, "error" => $mysqli->error]);
     exit;
 }
 
-$stmt->bind_param('s', $email);
+$stmt->bind_param('ss', $placeholderUsername, $email);
 if (!$stmt->execute()) {
     echo json_encode(["success" => false, "step" => "exec_insert", "sql" => $sql, "error" => $stmt->error]);
     $stmt->close();
