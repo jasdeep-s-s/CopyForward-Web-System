@@ -1,5 +1,7 @@
+// by Pascal Ypperciel, 40210921
 import React, { useEffect, useRef, useState } from 'react'
 import MessagePopup from './pages/MessagePopup'
+import AddItemForm from './pages/AddItemForm'
 
 function Header({ onMailClick }) {
   const [open, setOpen] = useState(false)
@@ -10,6 +12,7 @@ function Header({ onMailClick }) {
   const [refEmail, setRefEmail] = useState('')
   const [refLoading, setRefLoading] = useState(false)
   const [refMessage, setRefMessage] = useState('')
+  const [showAuthorBox, setShowAuthorBox] = useState(false)
 
   useEffect(() => {
     function handleStorage() {
@@ -82,6 +85,16 @@ function Header({ onMailClick }) {
           </svg>
           <span>Mail</span>
         </button>
+        {role === 'author' ? (
+          <button className="btn" type="button" onClick={() => setShowAuthorBox(true)} style={{ display: 'flex', alignItems: 'center', gap: 6 }} aria-label="Author">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <path d="M12 2v6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M6 8v12h12V8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M9 12h6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span>Post an Item</span>
+          </button>
+        ) : null}
       </div>
 
       <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', fontWeight: 'bold', cursor: 'pointer' }} onClick={() => goHash('#/')}>
@@ -147,6 +160,11 @@ function Header({ onMailClick }) {
           </div>
           {refMessage ? <div style={{ marginTop: 8, color: refMessage === 'Reference added' ? 'darkgreen' : 'darkred' }}>{refMessage}</div> : null}
         </div>
+      </MessagePopup>
+    ) : null}
+    {showAuthorBox ? (
+      <MessagePopup onClose={() => setShowAuthorBox(false)}>
+        <AddItemForm onClose={() => setShowAuthorBox(false)} />
       </MessagePopup>
     ) : null}
     </>

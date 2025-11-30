@@ -1,4 +1,5 @@
 <?php
+// by Pascal Ypperciel, 40210921
 header('Content-Type: application/json');
 
 ini_set('display_errors', 0);
@@ -63,7 +64,11 @@ $stmt->store_result();
 if ($stmt->num_rows === 0) { $stmt->close(); echo json_encode(["success"=>false, "error"=>"Item not found"]); exit; }
 $stmt->close();
 
-$stmt = $mysqli->prepare("SELECT ChildrenCharityID FROM ChildrenCharity WHERE ChildrenCharityID = ? AND Approved = 1 LIMIT 1");
+$stmt = $mysqli->prepare(
+    "SELECT ChildrenCharityID 
+    FROM ChildrenCharity 
+    WHERE ChildrenCharityID = ? AND Approved = 1 
+    LIMIT 1");
 if (!$stmt) { echo json_encode(["success"=>false, "error"=>"prepare_charity_failed"]); exit; }
 $stmt->bind_param('i', $charityId);
 $stmt->execute();
@@ -71,7 +76,8 @@ $stmt->store_result();
 if ($stmt->num_rows === 0) { $stmt->close(); echo json_encode(["success"=>false, "error"=>"Charity not found or not approved"]); exit; }
 $stmt->close();
 
-$sql = "INSERT INTO Donation (DonatorID, ItemID, ChildrenCharityID, Amount, AuthorPercent, ChildrenCharityPercent, CFPPercent, Date) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+$sql = "INSERT INTO Donation (DonatorID, ItemID, ChildrenCharityID, Amount, AuthorPercent, ChildrenCharityPercent, CFPPercent, Date) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
 $ins = $mysqli->prepare($sql);
 if (!$ins) { echo json_encode(["success"=>false, "error"=>"prepare_insert_failed", "sql"=>$sql]); exit; }
 $ins->bind_param('iiiiiii', $donatorId, $itemId, $charityId, $amount, $authorPercent, $childrenPercent, $cfpPercent);

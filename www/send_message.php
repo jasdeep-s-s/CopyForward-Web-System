@@ -1,4 +1,5 @@
 <?php
+// by Pascal Ypperciel, 40210921
 header('Content-Type: application/json');
 
 ini_set('display_errors', 0);
@@ -85,10 +86,9 @@ if (!$stmt->fetch()) {
 }
 $stmt->close();
 
-$sql = "
-    INSERT INTO PrivateMessage (SenderID, ReceiverID, Date, Message)
-    VALUES (?, ?, NOW(), ?)
-";
+$sql =
+    "INSERT INTO PrivateMessage (SenderID, ReceiverID, Date, Message)
+    VALUES (?, ?, NOW(), ?)";
 
 $stmt = $mysqli->prepare($sql);
 

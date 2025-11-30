@@ -1,3 +1,4 @@
+// by Pascal Ypperciel, 40210921
 import React, { useEffect, useState } from 'react'
 import './ItemPage.css'
 
@@ -50,7 +51,7 @@ function ItemDonation ({ itemId }) {
     .then(d => {
       setSuggestLoading(false)
       if (d && d.success) {
-        setSuggestMessage('Suggestion submitted — awaiting approval')
+        setSuggestMessage('Suggestion submitted - awaiting approval')
         setSuggestName('')
         setSuggestMode(false)
         fetch('/charities.php').then(r=>r.json()).then(data=>setCharities(data||[])).catch(()=>{})

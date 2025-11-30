@@ -1,4 +1,5 @@
 <?php
+// by Pascal Ypperciel, 40210921
 header('Content-Type: application/json');
 
 ini_set('display_errors', 0);
@@ -25,7 +26,10 @@ if ($id <= 0) {
     exit;
 }
 
-$sql = "SELECT i.ParentTitleID FROM Item i WHERE i.ItemID = ? LIMIT 1";
+$sql = "SELECT i.ParentTitleID 
+    FROM Item i 
+    WHERE i.ItemID = ? 
+    LIMIT 1";
 $stmt = $mysqli->prepare($sql);
 if (!$stmt) {
     http_response_code(500);

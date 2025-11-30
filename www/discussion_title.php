@@ -1,4 +1,5 @@
 <?php
+// by Pascal Ypperciel, 40210921
 header('Content-Type: application/json');
 
 ini_set('display_errors', 0);
@@ -23,7 +24,12 @@ try {
         exit;
     }
 
-    $stmt = $mysqli->prepare("SELECT Subject FROM Discussion WHERE DiscussionID = ? LIMIT 1");
+    $stmt = $mysqli->prepare(
+        "SELECT Subject 
+        FROM Discussion 
+        WHERE DiscussionID = ? 
+        LIMIT 1"
+    );
     if (!$stmt) throw new Exception($mysqli->error);
     $stmt->bind_param('i', $discussion);
     $stmt->execute();

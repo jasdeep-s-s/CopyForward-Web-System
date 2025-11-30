@@ -18,22 +18,18 @@ if ($mysqli->connect_errno) {
 }
 
 try {
-    $item = isset($_GET['item']) ? intval($_GET['item']) : 0;
-    if (!$item) {
-        echo json_encode(["success" => false, "error" => "missing_item"]);
-        exit;
-    }
-
-    $stmt = $mysqli->prepare("SELECT Title FROM Item WHERE ItemID = ? LIMIT 1");
+    $stmt = $mysqli->prepare(
+        "SELECT CommitteeID, Name, Description 
+        FROM Committee 
+        ORDER BY Name ASC");
     if (!$stmt) throw new Exception($mysqli->error);
-    $stmt->bind_param('i', $item);
     $stmt->execute();
     $res = $stmt->get_result();
-    if ($row = $res->fetch_assoc()) {
-        echo json_encode(["success" => true, "Title" => $row['Title']]);
-    } else {
-        echo json_encode(["success" => false, "error" => "not_found"]);
+    $out = [];
+    while ($row = $res->fetch_assoc()) {
+        $out[] = $row;
     }
+    echo json_encode($out);
 } catch (Exception $ex) {
     echo json_encode(["success" => false, "error" => $ex->getMessage()]);
 } finally {

@@ -1,4 +1,5 @@
 <?php
+// by Pascal Ypperciel, 40210921
 header('Content-Type: application/json');
 
 ini_set('display_errors', 0);
@@ -33,7 +34,8 @@ try {
         exit;
     }
 
-    $stmt = $mysqli->prepare("INSERT INTO DiscussionMessage (DiscussionID, SenderID, Message, Date) VALUES (?, ?, ?, NOW())");
+    $stmt = $mysqli->prepare("INSERT INTO DiscussionMessage (DiscussionID, SenderID, Message, Date) 
+        VALUES (?, ?, ?, NOW())");
     if (!$stmt) throw new Exception($mysqli->error);
     $stmt->bind_param('iis', $discussionId, $senderId, $message);
     $ok = $stmt->execute();

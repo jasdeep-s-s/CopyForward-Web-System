@@ -1,4 +1,5 @@
 <?php
+// by Pascal Ypperciel, 40210921
 header('Content-Type: application/json');
 
 ini_set('display_errors', 0);
@@ -25,11 +26,11 @@ try {
         exit;
     }
 
-    $sql = "SELECT COALESCE(m.Username, 'Unknown') AS Username, dm.Message, dm.Date\n"
-         . "FROM DiscussionMessage dm\n"
-         . "LEFT JOIN Member m ON dm.SenderID = m.MemberID\n"
-         . "WHERE dm.DiscussionID = " . $discussionId . "\n"
-         . "ORDER BY dm.Date ASC";
+    $sql = "SELECT COALESCE(m.Username, 'Unknown') AS Username, dm.Message, dm.Date
+        FROM DiscussionMessage dm
+        LEFT JOIN Member m ON dm.SenderID = m.MemberID
+        WHERE dm.DiscussionID = $discussionId
+        ORDER BY dm.Date ASC";
 
     $res = $mysqli->query($sql);
     if (!$res) throw new Exception($mysqli->error);

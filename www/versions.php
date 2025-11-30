@@ -1,4 +1,5 @@
 <?php
+// by Pascal Ypperciel, 40210921
 header('Content-Type: application/json');
 
 ini_set('display_errors', 0);
@@ -26,7 +27,10 @@ if ($parent <= 0) {
     exit;
 }
 
-$sql = "SELECT i.ItemID, i.Title, i.UploadDate FROM Item i WHERE i.ParentTitleID = ? ORDER BY i.UploadDate ASC";
+$sql = "SELECT i.ItemID, i.Title, i.UploadDate 
+    FROM Item i 
+    WHERE i.ParentTitleID = ? 
+    ORDER BY i.UploadDate ASC";
 $stmt = $mysqli->prepare($sql);
 if (!$stmt) {
     http_response_code(500);
@@ -36,7 +40,10 @@ if (!$stmt) {
 $exclude = isset($_GET['exclude']) ? intval($_GET['exclude']) : 0;
 
 if ($exclude > 0) {
-    $sql = "SELECT i.ItemID, i.Title, i.UploadDate FROM Item i WHERE i.ParentTitleID = ? AND i.ItemID != ? ORDER BY i.UploadDate ASC";
+    $sql = "SELECT i.ItemID, i.Title, i.UploadDate 
+        FROM Item i 
+        WHERE i.ParentTitleID = ? AND i.ItemID != ? 
+        ORDER BY i.UploadDate ASC";
     $stmt = $mysqli->prepare($sql);
     if (!$stmt) {
         http_response_code(500);
@@ -45,7 +52,10 @@ if ($exclude > 0) {
     }
     $stmt->bind_param('ii', $parent, $exclude);
 } else {
-    $sql = "SELECT i.ItemID, i.Title, i.UploadDate FROM Item i WHERE i.ParentTitleID = ? ORDER BY i.UploadDate ASC";
+    $sql = "SELECT i.ItemID, i.Title, i.UploadDate 
+        FROM Item i 
+        WHERE i.ParentTitleID = ? 
+        ORDER BY i.UploadDate ASC";
     $stmt = $mysqli->prepare($sql);
     if (!$stmt) {
         http_response_code(500);
@@ -70,7 +80,10 @@ $stmt->close();
 
 $includeParent = isset($_GET['includeParent']) && ($_GET['includeParent'] === '1' || $_GET['includeParent'] === 'true');
 if ($includeParent) {
-    $pSql = "SELECT i.ItemID, i.Title, i.UploadDate FROM Item i WHERE i.ItemID = ? LIMIT 1";
+    $pSql = "SELECT i.ItemID, i.Title, i.UploadDate 
+        FROM Item i 
+        WHERE i.ItemID = ? 
+        LIMIT 1";
     $pStmt = $mysqli->prepare($pSql);
     if ($pStmt) {
         $pStmt->bind_param('i', $parent);
