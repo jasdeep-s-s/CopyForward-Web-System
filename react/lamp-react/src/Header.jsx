@@ -1,12 +1,18 @@
 // by Pascal Ypperciel, 40210921
+// and Tudor Cosmin Suciu 40179863
+
 import React, { useEffect, useRef, useState } from 'react'
 import MessagePopup from './pages/MessagePopup'
 import AddItemForm from './pages/AddItemForm'
+import LoginPopup from './pages/LoginPopup'
+import SignupPopup from './pages/SignupPopup'
 
 function Header({ onMailClick }) {
   const [open, setOpen] = useState(false)
   const [loggedIn, setLoggedIn] = useState(Boolean(localStorage.getItem('logged_in_id')))
   const [role, setRole] = useState(localStorage.getItem('logged_in_role') || '')
+  const [showLoginPopup, setShowLoginPopup] = useState(false)
+  const [showSignupPopup, setShowSignupPopup] = useState(false)
   const ref = useRef(null)
   const [showRefBox, setShowRefBox] = useState(false)
   const [refEmail, setRefEmail] = useState('')
@@ -35,13 +41,26 @@ function Header({ onMailClick }) {
     setOpen(false)
   }
 
-  function logout() {
+  function onAuthed(user) {
+    setLoggedIn(true)
+    setRole(user?.role || '')
+    setOpen(false)
+    setShowLoginPopup(false)
+    setShowSignupPopup(false)
+  }
+
+  async function logout() {
+    setOpen(false)
+    try {
+      await fetch('/logout.php', { method: 'POST', credentials: 'include' })
+    } catch (e) {
+      // ignore network errors here; we still clear client state
+    }
     localStorage.removeItem('logged_in_id')
     localStorage.removeItem('logged_in_role')
     localStorage.removeItem('logged_in_email')
     setLoggedIn(false)
     setRole('')
-    setOpen(false)
     window.location.hash = '#/'
   }
 
@@ -139,8 +158,8 @@ function Header({ onMailClick }) {
                 </div>
               ) : (
                 <div>
-                  <div style={{ padding: 6, cursor: 'pointer' }} onClick={() => goHash('#/login')}>Log In</div>
-                  <div style={{ padding: 6, cursor: 'pointer' }} onClick={() => goHash('#/signup')}>Sign Up</div>
+                  <div style={{ padding: 6, cursor: 'pointer' }} onClick={() => { setShowLoginPopup(true); setOpen(false) }}>Log In</div>
+                  <div style={{ padding: 6, cursor: 'pointer' }} onClick={() => { setShowSignupPopup(true); setOpen(false) }}>Sign Up</div>
                 </div>
               )}
             </div>
@@ -166,6 +185,12 @@ function Header({ onMailClick }) {
       <MessagePopup onClose={() => setShowAuthorBox(false)}>
         <AddItemForm onClose={() => setShowAuthorBox(false)} />
       </MessagePopup>
+    ) : null}
+    {showLoginPopup ? (
+      <LoginPopup onClose={() => setShowLoginPopup(false)} onAuth={onAuthed} />
+    ) : null}
+    {showSignupPopup ? (
+      <SignupPopup onClose={() => setShowSignupPopup(false)} onAuth={onAuthed} />
     ) : null}
     </>
   )
