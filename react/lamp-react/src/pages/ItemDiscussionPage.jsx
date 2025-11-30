@@ -1,3 +1,4 @@
+// by Pascal Ypperciel, 40210921
 import React, { useEffect, useState } from 'react'
 import './ItemPage.css'
 import ItemDiscussionList from './ItemDiscussionList'

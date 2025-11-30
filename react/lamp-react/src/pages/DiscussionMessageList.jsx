@@ -1,3 +1,4 @@
+// by Pascal Ypperciel, 40210921
 import React, { useEffect, useState } from 'react'
 import './ItemPage.css'
 
@@ -104,7 +105,7 @@ function DiscussionMessageList({ discussionId }) {
         <div>Loading messages…</div>
       ) : error ? (
         <div className="empty">{error}</div>
-      ) : messages && messages.length ? (
+      ) : (
         <div>
           {details && details.VotingDeadline ? (
             <div style={{ marginBottom: 12 }}>
@@ -170,13 +171,17 @@ function DiscussionMessageList({ discussionId }) {
             </div>
           ) : null}
 
-          {messages.map((m, i) => (
-            <div key={i} style={{ padding: 8, borderBottom: '1px solid #eee' }}>
-              <div style={{ fontWeight: 600 }}>{m.Username || 'Unknown'}</div>
-              <div style={{ color: '#333', whiteSpace: 'pre-wrap', marginTop: 6 }}>{m.Message || ''}</div>
-              <div style={{ fontSize: '0.85rem', color: '#666', marginTop: 6 }}>{m.Date || ''}</div>
-            </div>
-          ))}
+          {(messages && messages.length) ? (
+            messages.map((m, i) => (
+              <div key={i} style={{ padding: 8, borderBottom: '1px solid #eee' }}>
+                <div style={{ fontWeight: 600 }}>{m.Username || 'Unknown'}</div>
+                <div style={{ color: '#333', whiteSpace: 'pre-wrap', marginTop: 6 }}>{m.Message || ''}</div>
+                <div style={{ fontSize: '0.85rem', color: '#666', marginTop: 6 }}>{m.Date || ''}</div>
+              </div>
+            ))
+          ) : (
+            <div className="empty">No messages</div>
+          )}
 
           <div style={{ marginTop: 12, paddingTop: 8 }}>
             <div style={{ fontWeight: 700, marginBottom: 6 }}>Post a message</div>
@@ -194,8 +199,6 @@ function DiscussionMessageList({ discussionId }) {
             </div>
           </div>
         </div>
-      ) : (
-        <div className="empty">No messages</div>
       )}
     </div>
   )

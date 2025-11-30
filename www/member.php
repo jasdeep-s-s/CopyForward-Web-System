@@ -1,4 +1,5 @@
 <?php
+// by Pascal Ypperciel, 40210921
 header('Content-Type: application/json');
 
 ini_set('display_errors', 0);
@@ -28,7 +29,10 @@ if ($id <= 0) {
     exit;
 }
 
-$sql = "SELECT MemberID, Role, Name, Username, Organization, PrimaryEmail, ORCID FROM Member WHERE MemberID = ? LIMIT 1";
+$sql = "SELECT MemberID, Role, Name, Username, Organization, PrimaryEmail, ORCID 
+    FROM Member 
+    WHERE MemberID = ? 
+    LIMIT 1";
 $stmt = $mysqli->prepare($sql);
 if (!$stmt) {
     echo json_encode(["success" => false, "step" => "prepare", "sql" => $sql, "error" => $mysqli->error]);

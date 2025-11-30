@@ -1,4 +1,5 @@
 <?php
+// by Pascal Ypperciel, 40210921
 header('Content-Type: application/json');
 
 ini_set('display_errors', 0);
@@ -25,7 +26,10 @@ try {
         exit;
     }
 
-    $sql = "SELECT d.DiscussionID, d.CommitteeID, d.VotingDeadline, COALESCE(c.Name, '') AS CommitteeName FROM Discussion d LEFT JOIN Committee c ON d.CommitteeID = c.CommitteeID WHERE d.DiscussionID = ?";
+    $sql = "SELECT d.DiscussionID, d.CommitteeID, d.VotingDeadline, COALESCE(c.Name, '') AS CommitteeName 
+        FROM Discussion d 
+        LEFT JOIN Committee c ON d.CommitteeID = c.CommitteeID 
+        WHERE d.DiscussionID = ?";
 
     $stmt = $mysqli->prepare($sql);
     $stmt->bind_param('i', $discussionId);

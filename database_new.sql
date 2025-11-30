@@ -33,7 +33,7 @@ CREATE TABLE Item (
   ApprovedBy INT,
   Topic VARCHAR(256),
   Type ENUM('Thesis','Article','Monograph & Book','Monograph Chapter','Conference Paper','Non-Thesis Graduate Project','Dataset'),
-  Status ENUM('Under Review (Upload)','Available','Under Review (Plagiarism)','Removed'),
+  Status ENUM('Under Review (Upload)','Available','Under Review (Plagiarism)','Removed', 'Deleted (Author)'),
   ParentTitleID INT,
   Content VARCHAR(5000),
   UpdatedAt DATETIME,
@@ -99,6 +99,7 @@ CREATE TABLE MemberCommittee (
   MemberCommitteeID INT PRIMARY KEY AUTO_INCREMENT,
   MemberID INT NOT NULL,
   CommitteeID INT NOT NULL,
+  Approved TINYINT(1) NOT NULL DEFAULT 0,
   FOREIGN KEY (MemberID) REFERENCES Member(MemberID),
   FOREIGN KEY (CommitteeID) REFERENCES Committee(CommitteeID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -201,9 +202,11 @@ BEGIN
         SET Status = 'Under Review (Plagiarism)'
         WHERE AuthorID = author_orcid AND Status = 'Available' AND ItemID != d_item;
       END IF;
-    END IF;
 
-    UPDATE Discussion SET VoteActive = FALSE WHERE DiscussionID = d_id;
+      UPDATE Discussion SET VoteActive = FALSE, Status = 'Blacklisted' WHERE DiscussionID = d_id;
+    ELSE
+      UPDATE Discussion SET VoteActive = FALSE, Status = 'Dismissed' WHERE DiscussionID = d_id;
+    END IF;
   END LOOP;
   CLOSE cur;
 END$$
@@ -245,9 +248,11 @@ BEGIN
           VALUES (NULL, author_member, NOW(),
             CONCAT('Your item "', (SELECT IFNULL(Title, 'Untitled') FROM Item WHERE ItemID = d_item), '" has been reinstated following an appeal committee vote.'));
       END IF;
-    END IF;
 
-    UPDATE Discussion SET VoteActive = FALSE WHERE DiscussionID = d_id;
+      UPDATE Discussion SET VoteActive = FALSE, Status = 'Appeal' WHERE DiscussionID = d_id;
+    ELSE
+      UPDATE Discussion SET VoteActive = FALSE, Status = 'Dismissed' WHERE DiscussionID = d_id;
+    END IF;
   END LOOP;
   CLOSE cur;
 END$$

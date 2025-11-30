@@ -1,15 +1,24 @@
+// by Pascal Ypperciel, 40210921
+// and Tudor Cosmin Suciu 40179863
+
 import React, { useEffect, useRef, useState } from 'react'
 import MessagePopup from './pages/MessagePopup'
+import AddItemForm from './pages/AddItemForm'
+import LoginPopup from './pages/LoginPopup'
+import SignupPopup from './pages/SignupPopup'
 
 function Header({ onMailClick }) {
   const [open, setOpen] = useState(false)
   const [loggedIn, setLoggedIn] = useState(Boolean(localStorage.getItem('logged_in_id')))
   const [role, setRole] = useState(localStorage.getItem('logged_in_role') || '')
+  const [showLoginPopup, setShowLoginPopup] = useState(false)
+  const [showSignupPopup, setShowSignupPopup] = useState(false)
   const ref = useRef(null)
   const [showRefBox, setShowRefBox] = useState(false)
   const [refEmail, setRefEmail] = useState('')
   const [refLoading, setRefLoading] = useState(false)
   const [refMessage, setRefMessage] = useState('')
+  const [showAuthorBox, setShowAuthorBox] = useState(false)
 
   useEffect(() => {
     function handleStorage() {
@@ -32,13 +41,26 @@ function Header({ onMailClick }) {
     setOpen(false)
   }
 
-  function logout() {
+  function onAuthed(user) {
+    setLoggedIn(true)
+    setRole(user?.role || '')
+    setOpen(false)
+    setShowLoginPopup(false)
+    setShowSignupPopup(false)
+  }
+
+  async function logout() {
+    setOpen(false)
+    try {
+      await fetch('/logout.php', { method: 'POST', credentials: 'include' })
+    } catch (e) {
+      // ignore network errors here; we still clear client state
+    }
     localStorage.removeItem('logged_in_id')
     localStorage.removeItem('logged_in_role')
     localStorage.removeItem('logged_in_email')
     setLoggedIn(false)
     setRole('')
-    setOpen(false)
     window.location.hash = '#/'
   }
 
@@ -82,6 +104,16 @@ function Header({ onMailClick }) {
           </svg>
           <span>Mail</span>
         </button>
+        {role === 'author' ? (
+          <button className="btn" type="button" onClick={() => setShowAuthorBox(true)} style={{ display: 'flex', alignItems: 'center', gap: 6 }} aria-label="Author">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <path d="M12 2v6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M6 8v12h12V8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M9 12h6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span>Post an Item</span>
+          </button>
+        ) : null}
       </div>
 
       <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', fontWeight: 'bold', cursor: 'pointer' }} onClick={() => goHash('#/')}>
@@ -126,8 +158,8 @@ function Header({ onMailClick }) {
                 </div>
               ) : (
                 <div>
-                  <div style={{ padding: 6, cursor: 'pointer' }} onClick={() => goHash('#/login')}>Log In</div>
-                  <div style={{ padding: 6, cursor: 'pointer' }} onClick={() => goHash('#/signup')}>Sign Up</div>
+                  <div style={{ padding: 6, cursor: 'pointer' }} onClick={() => { setShowLoginPopup(true); setOpen(false) }}>Log In</div>
+                  <div style={{ padding: 6, cursor: 'pointer' }} onClick={() => { setShowSignupPopup(true); setOpen(false) }}>Sign Up</div>
                 </div>
               )}
             </div>
@@ -148,6 +180,17 @@ function Header({ onMailClick }) {
           {refMessage ? <div style={{ marginTop: 8, color: refMessage === 'Reference added' ? 'darkgreen' : 'darkred' }}>{refMessage}</div> : null}
         </div>
       </MessagePopup>
+    ) : null}
+    {showAuthorBox ? (
+      <MessagePopup onClose={() => setShowAuthorBox(false)}>
+        <AddItemForm onClose={() => setShowAuthorBox(false)} />
+      </MessagePopup>
+    ) : null}
+    {showLoginPopup ? (
+      <LoginPopup onClose={() => setShowLoginPopup(false)} onAuth={onAuthed} />
+    ) : null}
+    {showSignupPopup ? (
+      <SignupPopup onClose={() => setShowSignupPopup(false)} onAuth={onAuthed} />
     ) : null}
     </>
   )

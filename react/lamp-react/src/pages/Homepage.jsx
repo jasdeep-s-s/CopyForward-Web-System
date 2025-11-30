@@ -1,3 +1,4 @@
+// By Elhadji Moussa Diongue, 40186654
 import React, { useCallback, useEffect, useState } from 'react'
 import './Homepage.css'
 
@@ -9,6 +10,9 @@ function Homepage () {
   const [loggedInId, setLoggedInId] = useState(() => localStorage.getItem('logged_in_id'))
   const [canDownload, setCanDownload] = useState(null)
   const [downloadInfo, setDownloadInfo] = useState(null)
+  const [topItems, setTopItems] = useState([])
+  const [topLoading, setTopLoading] = useState(true)
+  const [topError, setTopError] = useState('')
 
   const fetchItems = useCallback(async (term = '') => {
     setLoading(true)
@@ -47,6 +51,40 @@ function Homepage () {
   useEffect(() => {
     fetchItems()
   }, [fetchItems])
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadTop() {
+      setTopLoading(true)
+      setTopError('')
+      try {
+        const res = await fetch('/statistics.php?report=top_items')
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        const normalized = Array.isArray(data)
+          ? data.map(it => ({
+            id: it.ItemID,
+            title: it.Title,
+            author: it.Author,
+            authorMemberId: it.AuthorMemberID,
+            type: it.Type,
+            downloads: it.DownloadCount || 0
+          }))
+          : []
+        if (!cancelled) setTopItems(normalized)
+      } catch (e) {
+        console.error('top items fetch error', e)
+        if (!cancelled) {
+          setTopItems([])
+          setTopError('Popular items not available right now.')
+        }
+      } finally {
+        if (!cancelled) setTopLoading(false)
+      }
+    }
+    loadTop()
+    return () => { cancelled = true }
+  }, [])
 
   useEffect(() => {
     function handleStorage () {
@@ -136,7 +174,7 @@ function Homepage () {
   }
 
   function formatDate (value) {
-    if (!value) return '—'
+    if (!value) return '-'
     const date = new Date(value)
     if (Number.isNaN(date.getTime())) return value
     return date.toLocaleDateString()
@@ -218,6 +256,49 @@ function Homepage () {
           </ul>
         </>
       )}
+
+      <section className="popular-section">
+        <div className="popular-header">
+          <h2>Most popular items</h2>
+          <span className="popular-subtitle">Based on download counts</span>
+        </div>
+        {topLoading ? (
+          <div>Loading popular items…</div>
+        ) : topError ? (
+          <div className="empty">{topError}</div>
+        ) : topItems.length === 0 ? (
+          <div className="empty">No popular items to show yet.</div>
+        ) : (
+          <div className="popular-list">
+            {topItems.map((item, idx) => (
+              <div key={item.id} className="popular-card" onClick={() => viewItem(item.id)}>
+                <div>
+                  <div className="popular-rank">#{idx + 1}</div>
+                  <div className="popular-title">{item.title}</div>
+                  <div className="popular-meta">
+                    {item.author ? (
+                      <>
+                        By{' '}
+                        {item.authorMemberId ? (
+                          <a href={`#/member/${item.authorMemberId}`} onClick={e => { e.preventDefault(); e.stopPropagation(); window.location.hash = `#/member/${item.authorMemberId}` }}>
+                            {item.author}
+                          </a>
+                        ) : (
+                          item.author
+                        )}
+                      </>
+                    ) : 'Unknown'}
+                    {item.type ? <span className="popular-type"> · {item.type}</span> : null}
+                  </div>
+                </div>
+                <div className="popular-downloads">
+                  {item.downloads} download{item.downloads === 1 ? '' : 's'}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   )
 }

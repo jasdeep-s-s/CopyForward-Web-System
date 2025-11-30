@@ -1,4 +1,5 @@
 <?php
+// by Pascal Ypperciel, 40210921
 header('Content-Type: application/json');
 
 ini_set('display_errors', 0);
@@ -27,7 +28,9 @@ try {
             exit;
         }
 
-        $sql = "SELECT SUM(dv.Vote = TRUE) AS TrueCount, SUM(dv.Vote = FALSE) AS FalseCount FROM DiscussionVote dv WHERE dv.DiscussionID = ?";
+        $sql = "SELECT SUM(dv.Vote = TRUE) AS TrueCount, SUM(dv.Vote = FALSE) AS FalseCount 
+            FROM DiscussionVote dv 
+            WHERE dv.DiscussionID = ?";
         $stmt = $mysqli->prepare($sql);
         $stmt->bind_param('i', $discussionId);
         $stmt->execute();
@@ -38,7 +41,10 @@ try {
 
         $hasVoted = false;
         if ($voterId) {
-            $sql2 = "SELECT 1 FROM DiscussionVote dv WHERE dv.VoterID = ? AND dv.DiscussionID = ? LIMIT 1";
+            $sql2 = "SELECT 1 
+                FROM DiscussionVote dv 
+                WHERE dv.VoterID = ? AND dv.DiscussionID = ? 
+                LIMIT 1";
             $stmt2 = $mysqli->prepare($sql2);
             $stmt2->bind_param('ii', $voterId, $discussionId);
             $stmt2->execute();
@@ -61,7 +67,12 @@ try {
             exit;
         }
 
-        $check = $mysqli->prepare("SELECT 1 FROM DiscussionVote dv WHERE dv.VoterID = ? AND dv.DiscussionID = ? LIMIT 1");
+        $check = $mysqli->prepare(
+            "SELECT 1 
+            FROM DiscussionVote dv 
+            WHERE dv.VoterID = ? AND dv.DiscussionID = ? 
+            LIMIT 1"
+        );
         $check->bind_param('ii', $voterId, $discussionId);
         $check->execute();
         $resCheck = $check->get_result();
@@ -70,7 +81,10 @@ try {
             exit;
         }
 
-        $ins = $mysqli->prepare("INSERT INTO DiscussionVote (VoterID, DiscussionID, Vote, Date) VALUES (?, ?, ?, NOW())");
+        $ins = $mysqli->prepare(
+            "INSERT INTO DiscussionVote (VoterID, DiscussionID, Vote, Date) 
+            VALUES (?, ?, ?, NOW())"
+        );
         $ins->bind_param('iii', $voterId, $discussionId, $vote);
         $ok = $ins->execute();
         if (!$ok) throw new Exception($mysqli->error);

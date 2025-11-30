@@ -1,3 +1,4 @@
+/* By Elhadji Moussa Diongue, 40186654 */
 .homepage {
   max-width: 1100px;
   margin: 0 auto;
@@ -169,6 +170,90 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.popular-section {
+  margin-top: 28px;
+  padding-top: 8px;
+  border-top: 1px solid #e6e6e6;
+}
+
+.popular-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.popular-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.popular-subtitle {
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.popular-list {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.popular-card {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 14px;
+  background: #fafafa;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+}
+
+.popular-card:hover {
+  border-color: #1976d2;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.popular-rank {
+  font-weight: 700;
+  color: #1976d2;
+  margin-bottom: 4px;
+}
+
+.popular-title {
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 4px;
+}
+
+.popular-meta {
+  color: #555;
+  font-size: 0.95rem;
+}
+
+.popular-meta a {
+  color: #1976d2;
+  text-decoration: none;
+}
+
+.popular-meta a:hover {
+  text-decoration: underline;
+}
+
+.popular-type {
+  color: #777;
+}
+
+.popular-downloads {
+  font-weight: 600;
+  color: #222;
+  white-space: nowrap;
 }
 
 @media (max-width: 600px) {

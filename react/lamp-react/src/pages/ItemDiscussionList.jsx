@@ -1,3 +1,4 @@
+// by Pascal Ypperciel, 40210921
 import React, { useEffect, useState } from 'react'
 import './ItemPage.css'
 import DiscussionMessageList from './DiscussionMessageList'
@@ -46,6 +47,7 @@ function ItemDiscussionList ({ itemId }) {
               <th style={{ textAlign: 'left', padding: 6 }}>Committee Description</th>
               <th style={{ textAlign: 'left', padding: 6 }}>Subject</th>
               <th style={{ textAlign: 'left', padding: 6 }}>Voting Deadline</th>
+              <th style={{ textAlign: 'left', padding: 6 }}>Status</th>
             </tr>
           </thead>
           <tbody>
@@ -64,6 +66,7 @@ function ItemDiscussionList ({ itemId }) {
                     </a>
                   </td>
                   <td style={{ padding: 6, verticalAlign: 'middle' }}>{r.VotingDeadline ? r.VotingDeadline : 'Not Started'}</td>
+                  <td style={{ padding: 6, verticalAlign: 'middle' }}>{r.Status || ''}</td>
                 </tr>
                 
               </React.Fragment>
