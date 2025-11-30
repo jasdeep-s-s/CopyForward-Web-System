@@ -37,16 +37,37 @@ $hash         = password_hash($pwd, PASSWORD_DEFAULT);
 require __DIR__ . '/db.php';
 
 // ensure unique username/email
-$stmt = $mysqli->prepare('SELECT 1 FROM Member WHERE Username = ? OR PrimaryEmail = ?');
-$stmt->bind_param('ss', $username, $email);
-$stmt->execute();
+$existingStmt = $mysqli->prepare('SELECT MemberID, Username, Password FROM Member WHERE PrimaryEmail = ? LIMIT 1');
+$existingStmt->bind_param('s', $email);
+$existingStmt->execute();
+$existingRes = $existingStmt->get_result();
+$existing = $existingRes ? $existingRes->fetch_assoc() : null;
+$existingStmt->close();
 
-if ($stmt->get_result()->fetch_row()) {
-    http_response_code(409);
-    echo json_encode(['error' => 'Username or email already exists']);
+if (!$existing) {
+    http_response_code(403);
+    echo json_encode(['error' => 'You must be referred before signing up.']);
     exit;
 }
-$stmt->close();
+
+$existingId = (int)$existing['MemberID'];
+$pendingPlaceholder = isset($existing['Password']) && $existing['Password'] === 'TBD';
+if (!$pendingPlaceholder) {
+    http_response_code(409);
+    echo json_encode(['error' => 'That email is already registered.']);
+    exit;
+}
+
+$usernameStmt = $mysqli->prepare('SELECT MemberID FROM Member WHERE Username = ? AND MemberID <> ? LIMIT 1');
+$usernameStmt->bind_param('si', $username, $existingId);
+$usernameStmt->execute();
+if ($usernameStmt->get_result()->fetch_row()) {
+    $usernameStmt->close();
+    http_response_code(409);
+    echo json_encode(['error' => 'Username already taken.']);
+    exit;
+}
+$usernameStmt->close();
 
 $mysqli->begin_transaction();
 
@@ -62,8 +83,9 @@ try {
     $addressStmt->close();
 
     $memberStmt = $mysqli->prepare(
-        'INSERT INTO Member (Role, Name, Username, Organization, AddressID, PrimaryEmail, RecoveryEmail, Password, ORCID, Blacklisted)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)'
+        'UPDATE Member
+            SET Role = ?, Name = ?, Username = ?, Organization = ?, AddressID = ?, RecoveryEmail = ?, Password = ?, ORCID = ?, Blacklisted = 0
+          WHERE MemberID = ?'
     );
 
     $role           = $orcid ? 'Author' : 'Regular';
@@ -72,23 +94,22 @@ try {
     $recoveryOrNull = $recoveryEmail ?: null;
 
     $memberStmt->bind_param(
-        'ssssissss',
+        'ssssisssi',
         $role,
         $name,
         $username,
         $orgOrNull,
         $addressId,
-        $email,
         $recoveryOrNull,
         $hash,
-        $orcidOrNull
+        $orcidOrNull,
+        $existingId
     );
 
     if (!$memberStmt->execute()) {
         throw new Exception('member');
     }
 
-    $memberId = $memberStmt->insert_id;
     $memberStmt->close();
     $mysqli->commit();
 } catch (Throwable $e) {
@@ -99,14 +120,14 @@ try {
 }
 
 session_regenerate_id(true);
-$_SESSION['member_id'] = $memberId;
+$_SESSION['member_id'] = $existingId;
 $_SESSION['role']      = $role;
 $_SESSION['email']     = $email;
 
 echo json_encode([
     'success' => true,
     'user'    => [
-        'id'       => $memberId,
+        'id'       => $existingId,
         'role'     => $role,
         'email'    => $email,
         'username' => $username,

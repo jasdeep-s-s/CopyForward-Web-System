@@ -43,32 +43,32 @@ INSERT INTO Member
 VALUES
 -- MemberID 1: Author (Alice)
 ('Author',   'Alice Author',   'aliceA',  'Concordia University', 1,
- 'alice@example.com', 'alice.recovery@example.com', 'pass123',
+ 'alice@example.com', 'alice.recovery@example.com', '$2y$12$yJ1gi2ylq2Peng7pdegvyeSr8B1xqUVonfGBr/6aXEQhgWShQH9fG',
  '0000-0000-0000-0001', FALSE),
 
 -- MemberID 2: Author (Bob)
 ('Author',   'Bob Brown',      'bobB',    'McGill University',    2,
- 'bob@example.com',   'bob.recovery@example.com',   'pass123',
+ 'bob@example.com',   'bob.recovery@example.com',   '$2y$12$yJ1gi2ylq2Peng7pdegvyeSr8B1xqUVonfGBr/6aXEQhgWShQH9fG',
  '0000-0000-0000-0002', FALSE),
 
 -- MemberID 3: Regular (Carol)
 ('Regular',  'Carol Clark',    'carolC',  'Independent',          3,
- 'carol@example.com', 'carol.recovery@example.com', 'pass123',
+ 'carol@example.com', 'carol.recovery@example.com', '$2y$12$yJ1gi2ylq2Peng7pdegvyeSr8B1xqUVonfGBr/6aXEQhgWShQH9fG',
  NULL, FALSE),
 
 -- MemberID 4: Moderator (Mike)
 ('Moderator','Mike Moderator', 'mikeM',   'CFP Staff',            1,
- 'mike@example.com',  'mike.recovery@example.com',  'pass123',
+ 'mike@example.com',  'mike.recovery@example.com',  '$2y$12$yJ1gi2ylq2Peng7pdegvyeSr8B1xqUVonfGBr/6aXEQhgWShQH9fG',
  NULL, FALSE),
 
 -- MemberID 5: Author (Dana)
 ('Author',   'Dana Doe',       'danaD',   'UdeM',                 4,
- 'dana@example.com',  'dana.recovery@example.com',  'pass123',
+ 'dana@example.com',  'dana.recovery@example.com',  '$2y$12$yJ1gi2ylq2Peng7pdegvyeSr8B1xqUVonfGBr/6aXEQhgWShQH9fG',
  '0000-0000-0000-0003', FALSE),
 
 -- MemberID 6: Regular (Eric)
 ('Regular',  'Eric Evans',     'ericE',   'Student',              5,
- 'eric@example.com',  'eric.recovery@example.com',  'pass123',
+ 'eric@example.com',  'eric.recovery@example.com',  '$2y$12$yJ1gi2ylq2Peng7pdegvyeSr8B1xqUVonfGBr/6aXEQhgWShQH9fG',
  NULL, FALSE);
 
 
