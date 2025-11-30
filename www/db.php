@@ -1,6 +1,5 @@
-// by Tudor Cosmin Suciu, 40179863
-
 <?php
+// by Tudor Cosmin Suciu, 40179863
 
 $dbHost = 'database';
 $dbUser = getenv('MYSQL_USER') ?: 'docker';

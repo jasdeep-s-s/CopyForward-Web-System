@@ -1,6 +1,6 @@
+<?php
 // by Tudor Cosmin Suciu, 40179863
 
-<?php
 session_start();
 header('Content-Type: application/json');
 

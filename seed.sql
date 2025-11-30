@@ -1,6 +1,9 @@
 -- database_seed.sql
 -- Seed data consistent with database_new.sql (ORCID CHAR(19), AuthorID CHAR(19), Matrix CHAR(25))
 
+-- If using docker, uncomment to grant access:
+-- GRANT ALL PRIVILEGES ON cfp.* TO 'docker'@'%';
+
 SET FOREIGN_KEY_CHECKS = 0;
 
 TRUNCATE TABLE MFAMatrix;

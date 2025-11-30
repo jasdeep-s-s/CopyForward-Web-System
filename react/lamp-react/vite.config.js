@@ -7,6 +7,6 @@ export default defineConfig({
   base: '/react/',
   build: {
     outDir: '../../www/react',
-    emptyOutDir: false
+    emptyOutDir: true
   }
 })

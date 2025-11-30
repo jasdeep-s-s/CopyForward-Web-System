@@ -1,6 +1,5 @@
-// by Tudor Cosmin Suciu, 40179863
-
 <?php
+// by Tudor Cosmin Suciu, 40179863
 
 session_start();
 $_SESSION = [];
