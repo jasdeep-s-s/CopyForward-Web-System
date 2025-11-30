@@ -1,4 +1,5 @@
 <?php
+//By Elhadji Moussa Diongue, 40186654
 header('Content-Type: application/json');
 
 ini_set('display_errors', 0);
