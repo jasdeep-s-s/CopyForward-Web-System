@@ -20,9 +20,9 @@ TRUNCATE TABLE Address;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
-------------------------------------------------------------
+-- ----------------------------------------------------------
 -- 1. ADDRESS
-------------------------------------------------------------
+-- ----------------------------------------------------------
 INSERT INTO Address (StreetNumber, StreetName, City, Country) VALUES
 (123, 'Crescent Street', 'Montreal', 'Canada'),   -- AddressID = 1
 (44,  'Sherbrooke Street', 'Montreal', 'Canada'), -- AddressID = 2
@@ -31,10 +31,10 @@ INSERT INTO Address (StreetNumber, StreetName, City, Country) VALUES
 (77,  'Queen Mary Road', 'Montreal', 'Canada');   -- AddressID = 5
 
 
-------------------------------------------------------------
+-- ----------------------------------------------------------
 -- 2. MEMBERS
 -- ORCID is CHAR(19), we use real ORCID-like format dddd-dddd-dddd-dddd
-------------------------------------------------------------
+-- ----------------------------------------------------------
 INSERT INTO Member
 (Role, Name, Username, Organization, AddressID, PrimaryEmail, RecoveryEmail, Password, ORCID, Blacklisted)
 VALUES
@@ -69,10 +69,10 @@ VALUES
  NULL, FALSE);
 
 
-------------------------------------------------------------
+-- ----------------------------------------------------------
 -- 3. ITEMS
 -- AuthorID CHAR(19) references Member(ORCID)
-------------------------------------------------------------
+-- ----------------------------------------------------------
 INSERT INTO Item
 (AuthorID, Title, PublicationDate, UploadDate, ApprovedBy,
  Topic, Type, Status, ParentTitleID, Content, UpdatedAt)
@@ -118,9 +118,9 @@ VALUES
  '2023-06-10 10:00:00');
 
 
-------------------------------------------------------------
+-- ----------------------------------------------------------
 -- 4. COMMENTS
-------------------------------------------------------------
+-- ----------------------------------------------------------
 INSERT INTO Comment
 (ItemID, CommentorID, Comment, Date, ParentCommentID, Private)
 VALUES
@@ -128,7 +128,7 @@ VALUES
 (1, 3, 'Great article, very helpful!', '2023-02-15 10:30:00', NULL, FALSE),
 
 -- CommentID 2: Alice replying to Carol
-(1, 1, 'Thanks for the feedback!', '2023-02-16 09:00:00', 1),
+(1, 1, 'Thanks for the feedback!', '2023-02-16 09:00:00', 1, FALSE),
 
 -- CommentID 3: Eric on Item 2
 (2, 6, 'Your thesis is very clear and detailed.', '2023-01-05 14:00:00', NULL, FALSE),
@@ -140,9 +140,9 @@ VALUES
 (5, 2, 'The extended version adds great value.', '2023-06-20 11:20:00', NULL, FALSE);
 
 
-------------------------------------------------------------
+-- ----------------------------------------------------------
 -- 5. DOWNLOADS
-------------------------------------------------------------
+-- ----------------------------------------------------------
 INSERT INTO Download (ItemID, DownloaderID, Date) VALUES
 (1, 3, '2023-02-10 12:00:00'),
 (1, 3, '2023-03-11 09:30:00'),
@@ -151,21 +151,21 @@ INSERT INTO Download (ItemID, DownloaderID, Date) VALUES
 (4, 6, '2023-06-02 10:10:00'),
 (5, 3, '2023-06-21 08:00:00');
 
-------------------------------------------------------------
+-- ----------------------------------------------------------
 -- 7. CHILDREN CHARITY
-------------------------------------------------------------
+-- ----------------------------------------------------------
 INSERT INTO ChildrenCharity (Name, Approved, SuggestedBy) VALUES
 ('Save the Children', TRUE,  NULL), -- ChildrenCharityID = 1
 ('UNICEF',            TRUE,  NULL), -- ChildrenCharityID = 2
 ('Kids Future Fund',  FALSE, 3);    -- ChildrenCharityID = 3 (suggested by Carol)
 
 
-------------------------------------------------------------
+-- ----------------------------------------------------------
 -- 8. DONATIONS
 -- Respect:
 --  CHECK (ChildrenCharityPercent >= 60)
 --  CHECK (AuthorPercent + ChildrenCharityPercent + CFPPercent = 100)
-------------------------------------------------------------
+-- ----------------------------------------------------------
 INSERT INTO Donation
 (DonatorID, ItemID, ChildrenCharityID, Amount,
  AuthorPercent, ChildrenCharityPercent, CFPPercent, Date)
@@ -183,26 +183,26 @@ VALUES
  15, 70, 15, '2023-06-22 15:30:00');
 
 
-------------------------------------------------------------
+-- ----------------------------------------------------------
 -- 9. COMMITTEES
-------------------------------------------------------------
+-- ----------------------------------------------------------
 INSERT INTO Committee (Name, Description) VALUES
 ('Plagiarism Committee', 'Handles plagiarism reviews and blacklist decisions'), -- CommitteeID = 1
 ('Appeal Committee',     'Handles appeals to plagiarism decisions');           -- CommitteeID = 2
 
 
-------------------------------------------------------------
+-- ----------------------------------------------------------
 -- 10. MEMBER ↔ COMMITTEE
-------------------------------------------------------------
+-- ----------------------------------------------------------
 INSERT INTO MemberCommittee (MemberID, CommitteeID) VALUES
 (4, 1),  -- Mike (moderator) in Plagiarism Committee
 (4, 2),  -- Mike in Appeal Committee
 (5, 1);  -- Dana also in Plagiarism Committee
 
 
-------------------------------------------------------------
+-- ----------------------------------------------------------
 -- 11. DISCUSSIONS (plagiarism cases)
-------------------------------------------------------------
+-- ----------------------------------------------------------
 INSERT INTO Discussion
 (CommitteeID, ItemID, Subject, VoteActive, VotingDeadline, Status)
 VALUES
@@ -219,9 +219,9 @@ VALUES
  '2023-04-10 23:59:59', 'Appeal');
 
 
-------------------------------------------------------------
+-- ----------------------------------------------------------
 -- 12. DISCUSSION MESSAGES
-------------------------------------------------------------
+-- ----------------------------------------------------------
 INSERT INTO DiscussionMessage
 (DiscussionID, SenderID, Message, Date)
 VALUES
@@ -238,10 +238,10 @@ VALUES
 (3, 4, 'Appeal committee has received the new documents.', '2023-03-26 15:20:00');
 
 
-------------------------------------------------------------
+-- ----------------------------------------------------------
 -- 13. DISCUSSION VOTES
 -- Vote is BOOL (0 = keep, 1 = blacklist) – your app can interpret it.
-------------------------------------------------------------
+-- ----------------------------------------------------------
 INSERT INTO DiscussionVote
 (VoterID, DiscussionID, Vote, Date)
 VALUES
@@ -250,9 +250,9 @@ VALUES
 (4, 3, 0, '2023-04-05 10:10:00');  -- Appeal decision: keep in Case 3
 
 
-------------------------------------------------------------
+-- ----------------------------------------------------------
 -- 14. PRIVATE MESSAGES
-------------------------------------------------------------
+-- ----------------------------------------------------------
 INSERT INTO PrivateMessage
 (SenderID, ReceiverID, Date, Message)
 VALUES
@@ -261,11 +261,11 @@ VALUES
 (2, 6, '2023-01-20 15:45:00', 'Glad my thesis was useful for your project!');
 
 
-------------------------------------------------------------
+-- ----------------------------------------------------------
 -- 15. MFA MATRIX
 -- Matrix CHAR(25) – all strings are exactly 25 characters
 -- All members have at least one MFA record.
-------------------------------------------------------------
+-- ----------------------------------------------------------
 INSERT INTO MFAMatrix
 (UserID, ExpiryDate, CreationDate, Matrix)
 VALUES
