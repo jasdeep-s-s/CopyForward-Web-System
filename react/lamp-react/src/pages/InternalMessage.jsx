@@ -272,10 +272,10 @@ function InternalMessage({ prefillTo, openCompose }) {
                 <div style={{ fontSize: "0.9rem", marginBottom: "0.25rem" }}>
                   {view === "received" ? (
                     <>
-                      From: {m.SenderID == null ? 'CFP System' : (m.PeerEmail || 'Unknown')}
+                      From: {m.PeerEmail ? m.PeerEmail : 'CFP System'}
                     </>
                   ) : (
-                    <>To: {m.PeerEmail}</>
+                    <>To: {m.PeerEmail || 'Unknown'}</>
                   )}
                 </div>
                 <div style={{ fontSize: "0.8rem", color: "#666" }}>{m.Date}</div>
