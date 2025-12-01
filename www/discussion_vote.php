@@ -1,5 +1,6 @@
 <?php
 // by Pascal Ypperciel, 40210921
+// Jasdeep S. Sandhu, 40266557
 header('Content-Type: application/json');
 
 ini_set('display_errors', 0);
@@ -65,6 +66,31 @@ try {
         if (!$voterId || !$discussionId || $vote === null) {
             echo json_encode(["success" => false, "error" => "missing_parameters"]);
             exit;
+        }
+
+        // Check if user has downloaded the item
+        $itemCheck = $mysqli->prepare(
+            "SELECT i.ItemID FROM Discussion d 
+            JOIN Item i ON d.ItemID = i.ItemID 
+            WHERE d.DiscussionID = ?"
+        );
+        $itemCheck->bind_param('i', $discussionId);
+        $itemCheck->execute();
+        $itemResult = $itemCheck->get_result();
+        $itemRow = $itemResult->fetch_assoc();
+        
+        if ($itemRow) {
+            $downloadCheck = $mysqli->prepare(
+                "SELECT 1 FROM Download WHERE DownloaderID = ? AND ItemID = ? LIMIT 1"
+            );
+            $downloadCheck->bind_param('ii', $voterId, $itemRow['ItemID']);
+            $downloadCheck->execute();
+            $downloadResult = $downloadCheck->get_result();
+            
+            if (!$downloadResult || !$downloadResult->fetch_assoc()) {
+                echo json_encode(["success" => false, "error" => "must_download_item"]);
+                exit;
+            }
         }
 
         $check = $mysqli->prepare(
