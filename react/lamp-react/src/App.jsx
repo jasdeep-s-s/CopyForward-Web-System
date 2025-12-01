@@ -14,6 +14,7 @@ import AuthorsPage from './pages/AuthorsPage'
 
 function App() {
   const [showMailPopup, setShowMailPopup] = useState(false);
+  const [matrixNotice, setMatrixNotice] = useState(null)
 
   const getPath = () => (window.location.hash ? window.location.hash.slice(1) : window.location.pathname)
   const [path, setPath] = useState(() => getPath())
@@ -23,6 +24,48 @@ function App() {
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
+
+  useEffect(() => {
+    function onMatrix(evt) {
+      if (evt?.detail) setMatrixNotice(evt.detail)
+    }
+    window.addEventListener('matrixNotice', onMatrix)
+    return () => window.removeEventListener('matrixNotice', onMatrix)
+  }, [])
+
+  useEffect(() => {
+    async function fetchPending() {
+      try {
+        const res = await fetch('/mfa_status.php', { credentials: 'include' })
+        const data = await res.json()
+        if (data?.pending) {
+          setMatrixNotice({
+            matrix: data.matrix,
+            expiry: data.expiry
+          })
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    fetchPending()
+  }, [])
+
+  function formatMatrix(str) {
+    if (!str) return ''
+    const cleaned = str.replace(/\s+/g, '').toUpperCase()
+    const chunks = cleaned.match(/.{1,5}/g) || []
+    return chunks.join(' ')
+  }
+
+  async function acknowledgeMatrix() {
+    try {
+      await fetch('/mfa_ack.php', { method: 'POST', credentials: 'include' })
+    } catch (e) {
+      // ignore errors
+    }
+    setMatrixNotice(null)
+  }
 
   const donationMatch = path.match(/^\/items\/([^\/]+)\/donate$/)
   const discussionMatch = path.match(/^\/items\/([^\/]+)\/discussions?$/)
@@ -65,6 +108,20 @@ function App() {
           <Homepage />
         )}
       </main>
+
+      {matrixNotice ? (
+        <MessagePopup onClose={acknowledgeMatrix}>
+          <div>
+            <h3>Security matrix updated</h3>
+            <p>Your MFA matrix has been renewed. Please copy or note it for your records.</p>
+            <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', background: '#f5f5f5', padding: 8, borderRadius: 4 }}>
+              {formatMatrix(matrixNotice.matrix)}
+            </pre>
+            {matrixNotice.expiry ? <p>Expires on: {matrixNotice.expiry}</p> : null}
+            <button className="btn primary" type="button" onClick={acknowledgeMatrix} style={{ marginTop: 12 }}>I have viewed my matrix</button>
+          </div>
+        </MessagePopup>
+      ) : null}
     </div>
   )
 }

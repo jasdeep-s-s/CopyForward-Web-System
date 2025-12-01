@@ -193,7 +193,7 @@ $matrixPlain = generate_matrix_plain();
 $expiry      = $now->modify('+10 days')->format('Y-m-d H:i:s');
 
 $matrixStmt = $mysqli->prepare(
-    'INSERT INTO MFAMatrix (UserID, ExpiryDate, CreationDate, Matrix) VALUES (?, ?, ?, ?)'
+    'INSERT INTO MFAMatrix (UserID, ExpiryDate, CreationDate, Matrix, recentlyUpdated) VALUES (?, ?, ?, ?, 0)'
 );
 $creation = $now->format('Y-m-d H:i:s');
 $matrixStmt->bind_param('isss', $existingId, $expiry, $creation, $matrixPlain);

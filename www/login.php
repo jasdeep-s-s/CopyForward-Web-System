@@ -36,6 +36,24 @@ $_SESSION['member_id'] = (int)$row['MemberID'];
 $_SESSION['role']      = $row['Role'];
 $_SESSION['email']     = $row['PrimaryEmail'];
 
+$matrixInfo = null;
+$matrixStmt = $mysqli->prepare('SELECT Matrix, ExpiryDate, CreationDate, recentlyUpdated FROM MFAMatrix WHERE UserID = ? ORDER BY CreationDate DESC LIMIT 1');
+$mid = (int)$row['MemberID'];
+$matrixStmt->bind_param('i', $mid);
+if ($matrixStmt->execute()) {
+    $res = $matrixStmt->get_result();
+    $mr  = $res ? $res->fetch_assoc() : null;
+    if ($mr) {
+        $matrixInfo = [
+            'matrix'  => $mr['Matrix'],
+            'expiry'  => $mr['ExpiryDate'],
+            'created' => $mr['CreationDate'],
+            'recentlyUpdated' => (bool)$mr['recentlyUpdated']
+        ];
+    }
+}
+$matrixStmt->close();
+
 respond(200, [
     'success' => true,
     'user'    => [
@@ -43,6 +61,7 @@ respond(200, [
         'role'     => $row['Role'],
         'email'    => $row['PrimaryEmail'],
         'username' => $row['Username']
-    ]
+    ],
+    'matrix'  => $matrixInfo
 ]);
 ?>

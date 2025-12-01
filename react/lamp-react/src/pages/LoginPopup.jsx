@@ -32,12 +32,24 @@ export default function LoginModal({ onClose, onAuth }) {
       return
     }
 
+    // handle matrix notice (server-driven recentlyUpdated flag)
+    if (data.matrix && data.matrix.matrix && data.matrix.recentlyUpdated) {
+      window.dispatchEvent(new CustomEvent('matrixNotice', { detail: {
+        matrix: data.matrix.matrix,
+        expiry: data.matrix.expiry,
+        created: data.matrix.created,
+        userId: data.user?.id
+      }}))
+    }
+
     // keep compatibility with existing localStorage listeners
     localStorage.setItem('logged_in_id', String(data.user.id))
     localStorage.setItem('logged_in_role', data.user.role || '')
     localStorage.setItem('logged_in_email', data.user.email || '')
     onAuth?.(data.user)
     onClose()
+    // Refresh the page state so session-based content updates immediately
+    window.location.reload()
   }
 
   return (

@@ -62,6 +62,7 @@ function Header({ onMailClick }) {
     setLoggedIn(false)
     setRole('')
     window.location.hash = '#/'
+    window.location.reload()
   }
 
   function sendReference() {

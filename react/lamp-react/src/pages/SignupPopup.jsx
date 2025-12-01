@@ -119,6 +119,7 @@ export default function SignupPopup({ onClose, onAuth }) {
     localStorage.removeItem('signup_state')
     onAuth?.(data.user)
     onClose()
+    window.location.reload()
   }
 
   return (
