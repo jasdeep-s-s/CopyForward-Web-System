@@ -335,7 +335,13 @@ function StatisticsPage() {
                         <td style={{ padding: 6, textAlign: 'center', verticalAlign: 'middle' }}>{idx + 1}</td>
                         <td style={{ padding: 6, verticalAlign: 'middle' }}><a href={`#/items/${row.ItemID}`}>{row.Title || 'Untitled'}</a></td>
                         <td style={{ padding: 6, verticalAlign: 'middle' }}>{row.Type || ''}</td>
-                        <td style={{ padding: 6, verticalAlign: 'middle' }}>{row.Author || 'Unknown'}</td>
+                        <td style={{ padding: 6, verticalAlign: 'middle' }}>
+                          {row.AuthorMemberID ? (
+                            <a href={`#/member/${row.AuthorMemberID}`}>{row.Author || 'Unknown'}</a>
+                          ) : (
+                            (row.Author || 'Unknown')
+                          )}
+                        </td>
                         <td style={{ padding: 6, textAlign: 'center', verticalAlign: 'middle' }}>{row.DownloadCount ?? 0}</td>
                       </tr>
                     ))}
