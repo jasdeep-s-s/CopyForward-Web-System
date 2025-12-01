@@ -104,7 +104,7 @@ function Header({ onMailClick }) {
           </svg>
           <span>Mail</span>
         </button>
-        {role === 'author' ? (
+        {role === 'Author' ? (
           <button className="btn" type="button" onClick={() => setShowAuthorBox(true)} style={{ display: 'flex', alignItems: 'center', gap: 6 }} aria-label="Author">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
               <path d="M12 2v6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -130,7 +130,7 @@ function Header({ onMailClick }) {
           </svg>
           <span>Statistics</span>
         </button>
-        {role === 'moderator' ? (
+        {role === 'Moderator' ? (
           <button className="btn" type="button" onClick={() => goHash('#/mod')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
               <path d="M12 12c2.7614 0 5-2.2386 5-5s-2.2386-5-5-5-5 2.2386-5 5 2.2386 5 5 5z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>

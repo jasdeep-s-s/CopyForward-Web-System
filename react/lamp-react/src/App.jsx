@@ -11,6 +11,7 @@ import MemberPage from './pages/MemberPage'
 import StatisticsPage from './pages/StatisticsPage'
 import Homepage from './pages/Homepage'
 import AuthorsPage from './pages/AuthorsPage'
+import ModeratorPage from './pages/ModeratorPage'
 
 function App() {
   const [showMailPopup, setShowMailPopup] = useState(false);
@@ -32,6 +33,7 @@ function App() {
   const memberMatch = path.match(/^\/member\/(\d+)$/)
   const statisticsMatch = path === '/statistics'
   const authorsMatch = path === '/authors'
+  const modMatch = path === '/mod'
 
   return (
     <div className="app">
@@ -47,7 +49,9 @@ function App() {
       )}
 
       <main className="app-main">
-        {statisticsMatch ? (
+        {modMatch ? (
+          <ModeratorPage />
+        ) : statisticsMatch ? (
           <StatisticsPage />
         ) : discussionThreadMatch ? (
           <DiscussionThreadPage itemId={discussionThreadMatch[1]} discussionId={discussionThreadMatch[2]} />
