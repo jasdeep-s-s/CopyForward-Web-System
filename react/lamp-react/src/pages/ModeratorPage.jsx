@@ -489,27 +489,58 @@ function ModeratorPage() {
                 <th style={{ padding: 8, border: '1px solid #ddd', textAlign: 'left' }}>Commentor</th>
                 <th style={{ padding: 8, border: '1px solid #ddd', textAlign: 'left' }}>Comment</th>
                 <th style={{ padding: 8, border: '1px solid #ddd', textAlign: 'left' }}>Date</th>
-                <th style={{ padding: 8, border: '1px solid #ddd', textAlign: 'left' }}>Private</th>
+                <th style={{ padding: 8, border: '1px solid #ddd', textAlign: 'left' }}>Status</th>
                 <th style={{ padding: 8, border: '1px solid #ddd', textAlign: 'left' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {comments.map(c => (
-                <tr key={c.CommentID}>
-                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{c.CommentID}</td>
-                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{c.ItemTitle || c.ItemID}</td>
-                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{c.CommentorUsername || c.CommentorID}</td>
-                  <td style={{ padding: 8, border: '1px solid #ddd', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.Comment}</td>
-                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{c.Date ? new Date(c.Date).toLocaleDateString() : ''}</td>
-                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{c.Private ? 'No' : 'Yes'}</td>
-                  <td style={{ padding: 8, border: '1px solid #ddd' }}>
-                    <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px' }} onClick={() => toggleCommentPrivacy(c.CommentID, c.Private)}>
-                      {c.Private ? 'Make Public' : 'Make Private'}
-                    </button>
-                    <button className="btn" style={{ fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#ff3860', color: 'white' }} onClick={() => deleteComment(c.CommentID)}>Delete</button>
-                  </td>
-                </tr>
-              ))}
+              {comments.map(c => {
+                const isPrivate = parseInt(c.Private) === 1
+                return (
+                  <tr key={c.CommentID} style={{ backgroundColor: isPrivate ? '#fffbeb' : 'white' }}>
+                    <td style={{ padding: 8, border: '1px solid #ddd' }}>{c.CommentID}</td>
+                    <td style={{ padding: 8, border: '1px solid #ddd' }}>{c.ItemTitle || c.ItemID}</td>
+                    <td style={{ padding: 8, border: '1px solid #ddd' }}>{c.CommentorUsername || c.CommentorID}</td>
+                    <td style={{ padding: 8, border: '1px solid #ddd', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.Comment}</td>
+                    <td style={{ padding: 8, border: '1px solid #ddd' }}>{c.Date ? new Date(c.Date).toLocaleDateString() : ''}</td>
+                    <td style={{ padding: 8, border: '1px solid #ddd' }}>
+                      {isPrivate ? (
+                        <span style={{ color: '#f59e0b', fontWeight: '500' }}>Pending Approval</span>
+                      ) : (
+                        <span style={{ color: '#10b981' }}>Approved</span>
+                      )}
+                    </td>
+                    <td style={{ padding: 8, border: '1px solid #ddd' }}>
+                      {isPrivate ? (
+                        <>
+                          <button 
+                            className="btn" 
+                            style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px' }} 
+                            onClick={() => toggleCommentPrivacy(c.CommentID, c.Private)}
+                          >
+                            Approve
+                          </button>
+                          <button 
+                            className="btn" 
+                            style={{ fontSize: '0.8rem', padding: '4px 8px' }} 
+                            onClick={() => deleteComment(c.CommentID)}
+                          >
+                            Delete
+                          </button>
+                        </>
+                      ) : (
+                        <button 
+                          className="btn" 
+                          style={{ fontSize: '0.8rem', padding: '4px 8px' }} 
+                          onClick={() => deleteComment(c.CommentID)}
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
           {comments.length === 0 && <div style={{ marginTop: 12 }}>No comments found</div>}

@@ -1,5 +1,6 @@
 <?php
 // by Pascal Ypperciel, 40210921
+// by Jasdeep S. Sandhu, 40266557
 header('Content-Type: application/json');
 
 ini_set('display_errors', 0);
@@ -27,7 +28,8 @@ $itemId = isset($data['itemId']) ? intval($data['itemId']) : 0;
 $commentorId = isset($data['commentorId']) ? intval($data['commentorId']) : 0;
 $comment = isset($data['comment']) ? trim($data['comment']) : '';
 $parentId = isset($data['parentId']) ? intval($data['parentId']) : 0;
-$private = isset($data['private']) ? (bool)$data['private'] : false;
+// All new comments are private by default and require moderator approval
+$private = true;
 
 if ($itemId <= 0 || $commentorId <= 0 || $comment === '') {
     http_response_code(400);
@@ -38,19 +40,20 @@ if ($itemId <= 0 || $commentorId <= 0 || $comment === '') {
 
 $now = date('Y-m-d H:i:s');
 try {
+    // Always insert as private (1) - moderator must approve
+    $privateInt = 1;
+    
     if ($parentId > 0) {
         $sql = "INSERT INTO Comment (ItemID, CommentorID, Comment, Date, ParentCommentID, private) 
             VALUES (?, ?, ?, ?, ?, ?)";
         $stmt = $mysqli->prepare($sql);
         if (!$stmt) throw new Exception($mysqli->error);
-        $privateInt = $private ? 1 : 0;
         $stmt->bind_param('iissii', $itemId, $commentorId, $comment, $now, $parentId, $privateInt);
     } else {
         $sql = "INSERT INTO Comment (ItemID, CommentorID, Comment, Date, private) 
             VALUES (?, ?, ?, ?, ?)";
         $stmt = $mysqli->prepare($sql);
         if (!$stmt) throw new Exception($mysqli->error);
-        $privateInt = $private ? 1 : 0;
         $stmt->bind_param('iissi', $itemId, $commentorId, $comment, $now, $privateInt);
     }
 
