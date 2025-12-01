@@ -152,6 +152,7 @@ CREATE TABLE MFAMatrix (
   ExpiryDate DATETIME,
   CreationDate DATETIME,
   Matrix CHAR(25),
+  recentlyUpdated TINYINT(1) NOT NULL DEFAULT 0, -- NEW COLUMN 
   FOREIGN KEY (UserID) REFERENCES Member(MemberID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
