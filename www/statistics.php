@@ -110,12 +110,12 @@ try {
     }
 
     if ($report === 'top_items') {
-        $sql = "SELECT i.ItemID, i.Title, COALESCE(a.Name, 'Unknown') AS Author, i.Type, COUNT(d.ItemID) AS DownloadCount
+        $sql = "SELECT i.ItemID, i.Title, COALESCE(a.Name, 'Unknown') AS Author, a.MemberID AS AuthorMemberID, i.Type, COUNT(d.ItemID) AS DownloadCount
             FROM Item i
             LEFT JOIN Download d ON i.ItemID = d.ItemID
             LEFT JOIN Member a ON i.AuthorID = a.ORCID
             WHERE i.Status NOT IN ('Removed','Under Review (Upload)', 'Deleted (Author)')
-            GROUP BY i.ItemID, i.Title, a.Name, i.Type
+            GROUP BY i.ItemID, i.Title, a.Name, a.MemberID, i.Type
             ORDER BY DownloadCount DESC
             LIMIT 10";
 
@@ -128,6 +128,7 @@ try {
             $r['ItemID'] = isset($r['ItemID']) ? $r['ItemID'] : null;
             $r['Title'] = isset($r['Title']) ? $r['Title'] : '';
             $r['Author'] = isset($r['Author']) ? $r['Author'] : 'Unknown';
+            $r['AuthorMemberID'] = isset($r['AuthorMemberID']) ? intval($r['AuthorMemberID']) : null;
             $r['Type'] = isset($r['Type']) ? $r['Type'] : '';
             $rows[] = $r;
         }
