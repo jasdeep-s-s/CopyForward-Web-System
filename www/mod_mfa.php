@@ -6,6 +6,7 @@ session_start();
 header('Content-Type: application/json');
 
 require __DIR__ . '/db.php';
+require_once __DIR__ . '/mfa_lib.php';
 
 // Check if user is logged in and is a moderator
 $memberId = $_SESSION['member_id'] ?? null;
@@ -44,49 +45,53 @@ if ($method === 'GET') {
     exit;
 }
 
-// PUT - Regenerate MFA matrix for a user
+// PUT - Regenerate MFA matrix for a user (by matrix id or user id)
 if ($method === 'PUT') {
-    $input = json_decode(file_get_contents('php://input'), true);
+    $input = json_decode(file_get_contents('php://input'), true) ?: [];
     
     $mfaMatrixId = $input['mfaMatrixId'] ?? null;
+    $targetUserId = isset($input['userId']) ? (int)$input['userId'] : null;
+    $notifyUser = array_key_exists('notifyUser', $input) ? (bool)$input['notifyUser'] : true; // default notify
     
-    if (!$mfaMatrixId) {
+    if (!$mfaMatrixId && !$targetUserId) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'Missing mfaMatrixId']);
+        echo json_encode(['success' => false, 'error' => 'Missing mfaMatrixId or userId']);
         exit;
     }
     
-    // Generate new random 25-character matrix
-    $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    $newMatrix = '';
-    for ($i = 0; $i < 25; $i++) {
-        $newMatrix .= $characters[rand(0, strlen($characters) - 1)];
-    }
-    
-    // Set new expiry date (1 year from now)
-    $newExpiryDate = date('Y-m-d H:i:s', strtotime('+1 year'));
-    $creationDate = date('Y-m-d H:i:s');
-    
-    $stmt = $mysqli->prepare("UPDATE MFAMatrix SET Matrix = ?, ExpiryDate = ?, CreationDate = ? WHERE MFAMatrixID = ?");
-    $stmt->bind_param('sssi', $newMatrix, $newExpiryDate, $creationDate, $mfaMatrixId);
-    
-    if ($stmt->execute()) {
-        echo json_encode([
-            'success' => true, 
-            'newMatrix' => $newMatrix,
-            'newExpiryDate' => $newExpiryDate
-        ]);
-    } else {
+    $newExpiry   = new DateTimeImmutable('+30 days');
+    $regenerated = $mfaMatrixId
+        ? mfa_regenerate_by_matrix_id($mysqli, (int)$mfaMatrixId, $newExpiry)
+        : mfa_regenerate_latest_for_user($mysqli, $targetUserId, $newExpiry);
+
+    if (!$regenerated) {
         http_response_code(500);
-        echo json_encode(['success' => false, 'error' => $stmt->error]);
+        echo json_encode(['success' => false, 'error' => 'Failed to regenerate matrix']);
+        exit;
+    }
+
+    if ($targetUserId !== null) {
+        $notifyUser = true; // ensure notifying when regenerating by user id
+    }
+
+    if ($notifyUser && isset($regenerated['userId'])) {
+        mfa_notify_user_regenerated($mysqli, (int)$regenerated['userId'], $regenerated['formatted'], $regenerated['expiry'], new DateTimeImmutable('now'));
     }
     
+    echo json_encode([
+        'success'        => true, 
+        'newMatrix'      => $regenerated['matrix'],
+        'formatted'      => $regenerated['formatted'],
+        'newExpiryDate'  => $regenerated['expiry'],
+        'mfaMatrixId'    => $regenerated['matrixId'],
+        'userId'         => $regenerated['userId'],
+    ]);
     exit;
 }
 
 // POST - Create new MFA matrix for a user
 if ($method === 'POST') {
-    $input = json_decode(file_get_contents('php://input'), true);
+    $input = json_decode(file_get_contents('php://input'), true) ?: [];
     
     $userId = $input['userId'] ?? null;
     
@@ -96,31 +101,20 @@ if ($method === 'POST') {
         exit;
     }
     
-    // Generate random 25-character matrix
-    $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    $matrix = '';
-    for ($i = 0; $i < 25; $i++) {
-        $matrix .= $characters[rand(0, strlen($characters) - 1)];
-    }
-    
-    $expiryDate = date('Y-m-d H:i:s', strtotime('+1 year'));
-    $creationDate = date('Y-m-d H:i:s');
-    
-    $stmt = $mysqli->prepare("INSERT INTO MFAMatrix (UserID, ExpiryDate, CreationDate, Matrix) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param('isss', $userId, $expiryDate, $creationDate, $matrix);
-    
-    if ($stmt->execute()) {
-        echo json_encode([
-            'success' => true,
-            'mfaMatrixId' => $mysqli->insert_id,
-            'matrix' => $matrix,
-            'expiryDate' => $expiryDate
-        ]);
-    } else {
+    $created = mfa_create_matrix_for_user($mysqli, (int)$userId, new DateTimeImmutable('+30 days'));
+    if (!$created) {
         http_response_code(500);
-        echo json_encode(['success' => false, 'error' => $stmt->error]);
+        echo json_encode(['success' => false, 'error' => 'Failed to create matrix']);
+        exit;
     }
     
+    echo json_encode([
+        'success'     => true,
+        'mfaMatrixId' => $created['matrixId'],
+        'matrix'      => $created['matrix'],
+        'formatted'   => $created['formatted'],
+        'expiryDate'  => $created['expiry']
+    ]);
     exit;
 }
 

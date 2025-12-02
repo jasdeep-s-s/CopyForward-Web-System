@@ -190,7 +190,7 @@ $usernameStmt->close();
 
 // generate matrix and store it
 $matrixPlain = generate_matrix_plain();
-$expiry      = $now->modify('+10 days')->format('Y-m-d H:i:s');
+$expiry      = $now->modify('+30 days')->format('Y-m-d H:i:s');
 
 $matrixStmt = $mysqli->prepare(
     'INSERT INTO MFAMatrix (UserID, ExpiryDate, CreationDate, Matrix, recentlyUpdated) VALUES (?, ?, ?, ?, 0)'
@@ -204,7 +204,7 @@ if (!$matrixStmt->execute()) {
 $matrixStmt->close();
 
 // send matrix via private message (SenderID NULL for system)
-$message = "Your security matrix (expires in 10 days):\n" . format_matrix_5x5($matrixPlain);
+$message = "Your security matrix (expires in 30 days):\n" . format_matrix_5x5($matrixPlain);
 $pmStmt = $mysqli->prepare(
     'INSERT INTO PrivateMessage (SenderID, ReceiverID, Date, Message) VALUES (NULL, ?, ?, ?)'
 );
