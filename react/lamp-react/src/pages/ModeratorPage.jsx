@@ -556,7 +556,7 @@ function ModeratorPage() {
                         <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#ff3860', color: 'white' }} onClick={() => updateItemStatus(item.ItemID, 'Removed')}>Decline</button>
                       </>
                     )}
-                    {item.Status !== 'Deleted' ? (
+                    {(!['Deleted','Removed'].includes(item.Status)) ? (
                       <button className="btn" style={{ fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#ff3860', color: 'white' }} onClick={() => deleteItem(item.ItemID)}>Delete</button>
                     ) : null}
                   </td>
