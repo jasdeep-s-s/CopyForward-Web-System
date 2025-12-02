@@ -285,11 +285,11 @@ function ItemPage ({ itemId }) {
 		)
 	}
 
-	if (item.status === 'Deleted (Author)') {
+	if (item.status === 'Deleted') {
 		return (
 			<div className="item-page">
 				<header className="item-header">
-					<h1 className="item-title">This item has been deleted by the author.</h1>
+					<h1 className="item-title">This item has been deleted.</h1>
 				</header>
 			</div>
 		)
@@ -350,7 +350,7 @@ function ItemPage ({ itemId }) {
 							})
 							const j = await res.json()
 							if (j && j.success) {
-								setItem(prev => ({ ...prev, status: 'Deleted (Author)' }))
+								setItem(prev => ({ ...prev, status: 'Deleted' }))
 								alert('Item marked Deleted')
 							} else {
 								if (j && j.error) alert('Failed to delete item: ' + j.error)

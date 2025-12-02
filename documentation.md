@@ -163,7 +163,7 @@ docker exec -it lamp-database mysql -uroot -ptiger CFP
 2. **Available**: Approved and publicly accessible
 3. **Under Review (Plagiarism)**: Flagged for plagiarism review
 4. **Removed**: Committee voted to remove (can be appealed)
-5. **Deleted (Author)**: Author deleted their own item
+5. **Deleted**: Item deleted manually by the author or a moderator
 
 ### Committee Voting System
 - **Plagiarism Committee** (ID=1): 2/3 majority required to remove items

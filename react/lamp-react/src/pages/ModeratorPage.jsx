@@ -129,7 +129,7 @@ function ModeratorPage() {
   }
 
   async function deleteItem(itemId) {
-    if (!confirm('Delete this item? This will also delete related comments, downloads, and donations.')) return
+    if (!confirm('Delete this item? This will mark the item as deleted and will not be considered in the statistics.')) return
     try {
       const res = await requestWithOverride('/mod_items.php', 'DELETE', { itemId })
       if (!res.ok) throw new Error('Failed to delete item')
@@ -524,7 +524,7 @@ function ModeratorPage() {
                 <option value="Available">Available</option>
                 <option value="Under Review (Plagiarism)">Under Review (Plagiarism)</option>
                 <option value="Removed">Removed</option>
-                <option value="Deleted (Author)">Deleted (Author)</option>
+                <option value="Deleted">Deleted</option>
               </select>
             </div>
           </div>
@@ -556,7 +556,9 @@ function ModeratorPage() {
                         <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#ff3860', color: 'white' }} onClick={() => updateItemStatus(item.ItemID, 'Removed')}>Decline</button>
                       </>
                     )}
-                    <button className="btn" style={{ fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#ff3860', color: 'white' }} onClick={() => deleteItem(item.ItemID)}>Delete</button>
+                    {item.Status !== 'Deleted' ? (
+                      <button className="btn" style={{ fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#ff3860', color: 'white' }} onClick={() => deleteItem(item.ItemID)}>Delete</button>
+                    ) : null}
                   </td>
                 </tr>
               ))}
