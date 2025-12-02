@@ -201,7 +201,10 @@ CopyForward-Web-System/
 │   └── vite.config.js     # Builds to www/react/
 ├── www/                   # PHP backend & built frontend
 │   ├── assets/            # Static assets (CSS, images)
-│   ├── react/             # Built React app (DO NOT EDIT)
+│   ├── react/             # Unused/deprecated
+│   ├── index-<hash>.js    # JavaScript Static build file
+│   ├── index-<hash>.css   # CSS Static build file
+│   ├── index.html         # Main HTML Static build file
 │   ├── db.php             # Database connection
 │   ├── login.php          # Authentication endpoint
 │   ├── items.php          # Item listing/search
