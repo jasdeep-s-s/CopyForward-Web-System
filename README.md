@@ -214,7 +214,8 @@ CopyForward-Web-System/
 ├── .env                   # Environment configuration
 ├── database_new.sql       # Complete database schema
 ├── docker-compose.yml     # Service definitions
-└── seed.sql               # Sample data (if needed)
+└── seed.sql               # Sample data
+└── README.md              # This documentation file
 ```
 
 ## Testing
