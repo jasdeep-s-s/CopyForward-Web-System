@@ -496,10 +496,10 @@ function ModeratorPage() {
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>{c.CommentorUsername || c.CommentorID}</td>
                   <td style={{ padding: 8, border: '1px solid #ddd', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.Comment}</td>
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>{c.Date ? new Date(c.Date).toLocaleDateString() : ''}</td>
-                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{c.Private ? 'No' : 'Yes'}</td>
+                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{Number(c.Private) ? 'Yes' : 'No'}</td>
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>
-                    <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px' }} onClick={() => toggleCommentPrivacy(c.CommentID, c.Private)}>
-                      {c.Private ? 'Make Public' : 'Make Private'}
+                    <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px' }} onClick={() => toggleCommentPrivacy(c.CommentID, Number(c.Private))}>
+                      {Number(c.Private) ? 'Make Public' : 'Make Private'}
                     </button>
                     <button className="btn" style={{ fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#ff3860', color: 'white' }} onClick={() => deleteComment(c.CommentID)}>Delete</button>
                   </td>
