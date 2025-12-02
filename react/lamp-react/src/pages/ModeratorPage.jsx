@@ -54,6 +54,15 @@ function ModeratorPage() {
     else if (activeTab === 'mfa') loadMfaMatrices()
   }, [activeTab, itemStatusFilter, donationYear])
 
+  function requestWithOverride(url, method, payload = {}) {
+    const body = method === 'POST' ? payload : { ...payload, _method: method }
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+  }
+
   // Comments functions
   async function loadComments() {
     setLoading(true)
@@ -71,11 +80,7 @@ function ModeratorPage() {
 
   async function toggleCommentPrivacy(commentId, currentPrivate) {
     try {
-      const res = await fetch('/mod_comments.php', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ commentId, private: currentPrivate ? 0 : 1 })
-      })
+      const res = await requestWithOverride('/mod_comments.php', 'PUT', { commentId, private: currentPrivate ? 0 : 1 })
       if (!res.ok) throw new Error('Failed to update comment')
       setSuccess('Comment updated')
       await loadComments()
@@ -87,7 +92,7 @@ function ModeratorPage() {
   async function deleteComment(commentId) {
     if (!confirm('Delete this comment?')) return
     try {
-      const res = await fetch(`/mod_comments.php?id=${commentId}`, { method: 'DELETE' })
+      const res = await requestWithOverride('/mod_comments.php', 'DELETE', { commentId })
       if (!res.ok) throw new Error('Failed to delete comment')
       setSuccess('Comment deleted')
       loadComments()
@@ -114,11 +119,7 @@ function ModeratorPage() {
 
   async function updateItemStatus(itemId, newStatus) {
     try {
-      const res = await fetch('/mod_items.php', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ itemId, status: newStatus })
-      })
+      const res = await requestWithOverride('/mod_items.php', 'PUT', { itemId, status: newStatus })
       if (!res.ok) throw new Error('Failed to update item')
       setSuccess(`Item ${newStatus}`)
       loadItems()
@@ -130,7 +131,7 @@ function ModeratorPage() {
   async function deleteItem(itemId) {
     if (!confirm('Delete this item? This will also delete related comments, downloads, and donations.')) return
     try {
-      const res = await fetch(`/mod_items.php?id=${itemId}`, { method: 'DELETE' })
+      const res = await requestWithOverride('/mod_items.php', 'DELETE', { itemId })
       if (!res.ok) throw new Error('Failed to delete item')
       setSuccess('Item deleted')
       loadItems()
@@ -157,16 +158,13 @@ function ModeratorPage() {
   async function saveMember() {
     setError('')
     try {
-      const method = editingMember ? 'PUT' : 'POST'
       const body = editingMember 
         ? { ...memberFormData, memberId: editingMember.MemberID }
         : memberFormData
-      
-      const res = await fetch('/mod_members.php', {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      })
+
+      const res = editingMember
+        ? await requestWithOverride('/mod_members.php', 'PUT', body)
+        : await requestWithOverride('/mod_members.php', 'POST', body)
       if (!res.ok) {
         const err = await res.json()
         throw new Error(err.error || 'Failed to save member')
@@ -184,7 +182,7 @@ function ModeratorPage() {
   async function deleteMember(memberId) {
     if (!confirm('Delete this member? This will also delete all related data.')) return
     try {
-      const res = await fetch(`/mod_members.php?id=${memberId}`, { method: 'DELETE' })
+      const res = await requestWithOverride('/mod_members.php', 'DELETE', { memberId })
       if (!res.ok) {
         const err = await res.json()
         throw new Error(err.error || 'Failed to delete member')
@@ -228,16 +226,13 @@ function ModeratorPage() {
   async function saveCommittee() {
     setError('')
     try {
-      const method = editingCommittee ? 'PUT' : 'POST'
       const body = editingCommittee
         ? { ...committeeFormData, committeeId: editingCommittee.CommitteeID }
         : committeeFormData
-      
-      const res = await fetch('/mod_committees.php', {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      })
+
+      const res = editingCommittee
+        ? await requestWithOverride('/mod_committees.php', 'PUT', body)
+        : await requestWithOverride('/mod_committees.php', 'POST', body)
       if (!res.ok) throw new Error('Failed to save committee')
       setSuccess(editingCommittee ? 'Committee updated' : 'Committee created')
       setShowCommitteeForm(false)
@@ -252,7 +247,7 @@ function ModeratorPage() {
   async function deleteCommittee(committeeId) {
     if (!confirm('Delete this committee?')) return
     try {
-      const res = await fetch(`/mod_committees.php?id=${committeeId}`, { method: 'DELETE' })
+      const res = await requestWithOverride('/mod_committees.php', 'DELETE', { committeeId })
       if (!res.ok) throw new Error('Failed to delete committee')
       setSuccess('Committee deleted')
       loadCommittees()
@@ -288,11 +283,7 @@ function ModeratorPage() {
 
   async function toggleCharityApproval(charityId, currentApproved) {
     try {
-      const res = await fetch('/mod_charities.php', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ charityId, approved: currentApproved ? 0 : 1 })
-      })
+      const res = await requestWithOverride('/mod_charities.php', 'PUT', { charityId, approved: currentApproved ? 0 : 1 })
       if (!res.ok) throw new Error('Failed to update charity')
       setSuccess('Charity updated')
       loadCharities()
@@ -304,16 +295,13 @@ function ModeratorPage() {
   async function saveCharity() {
     setError('')
     try {
-      const method = editingCharity ? 'PUT' : 'POST'
       const body = editingCharity
         ? { ...charityFormData, charityId: editingCharity.ChildrenCharityID }
         : charityFormData
       
-      const res = await fetch('/mod_charities.php', {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      })
+      const res = editingCharity
+        ? await requestWithOverride('/mod_charities.php', 'PUT', body)
+        : await requestWithOverride('/mod_charities.php', 'POST', body)
       if (!res.ok) throw new Error('Failed to save charity')
       setSuccess(editingCharity ? 'Charity updated' : 'Charity created')
       setShowCharityForm(false)
@@ -328,7 +316,7 @@ function ModeratorPage() {
   async function deleteCharity(charityId) {
     if (!confirm('Delete this charity?')) return
     try {
-      const res = await fetch(`/mod_charities.php?id=${charityId}`, { method: 'DELETE' })
+      const res = await requestWithOverride('/mod_charities.php', 'DELETE', { charityId })
       if (!res.ok) throw new Error('Failed to delete charity')
       setSuccess('Charity deleted')
       loadCharities()
@@ -363,11 +351,7 @@ function ModeratorPage() {
 
   async function approveCommitteeMember(memberCommitteeId, approved) {
     try {
-      const res = await fetch('/mod_committee_members.php', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ memberCommitteeId, approved: approved ? 1 : 0 })
-      })
+      const res = await requestWithOverride('/mod_committee_members.php', 'PUT', { memberCommitteeId, approved: approved ? 1 : 0 })
       if (!res.ok) throw new Error('Failed to update member')
       setSuccess('Member updated')
       loadCommitteeMembers(viewingCommitteeId)
@@ -379,7 +363,7 @@ function ModeratorPage() {
   async function removeCommitteeMember(memberCommitteeId) {
     if (!confirm('Remove this member from committee?')) return
     try {
-      const res = await fetch(`/mod_committee_members.php?id=${memberCommitteeId}`, { method: 'DELETE' })
+      const res = await requestWithOverride('/mod_committee_members.php', 'DELETE', { memberCommitteeId })
       if (!res.ok) throw new Error('Failed to remove member')
       setSuccess('Member removed from committee')
       loadCommitteeMembers(viewingCommitteeId)
@@ -406,11 +390,7 @@ function ModeratorPage() {
   async function regenerateMfaMatrix(mfaMatrixId) {
     if (!confirm('Regenerate this MFA matrix? The user will need the new matrix.')) return
     try {
-      const res = await fetch('/mod_mfa.php', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mfaMatrixId })
-      })
+      const res = await requestWithOverride('/mod_mfa.php', 'PUT', { mfaMatrixId })
       if (!res.ok) throw new Error('Failed to regenerate matrix')
       const data = await res.json()
       setSuccess(`Matrix regenerated: ${data.newMatrix}`)

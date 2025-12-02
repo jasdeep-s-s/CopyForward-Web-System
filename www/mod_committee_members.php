@@ -7,6 +7,11 @@ header('Content-Type: application/json');
 
 require __DIR__ . '/db.php';
 
+$rawBody = file_get_contents('php://input');
+$input = json_decode($rawBody, true) ?: [];
+$override = $_POST['_method'] ?? ($input['_method'] ?? null);
+$method = $override ? strtoupper($override) : $_SERVER['REQUEST_METHOD'];
+
 // Check if user is logged in and is a moderator
 $memberId = $_SESSION['member_id'] ?? null;
 $role = $_SESSION['role'] ?? null;
@@ -16,8 +21,6 @@ if (!$memberId || $role !== 'Moderator') {
     echo json_encode(['success' => false, 'error' => 'Access denied. Moderator access required.']);
     exit;
 }
-
-$method = $_SERVER['REQUEST_METHOD'];
 
 // GET - List members of a specific committee with approval status
 if ($method === 'GET') {
@@ -57,8 +60,6 @@ if ($method === 'GET') {
 
 // PUT - Approve/Reject committee join request
 if ($method === 'PUT') {
-    $input = json_decode(file_get_contents('php://input'), true);
-    
     $memberCommitteeId = $input['memberCommitteeId'] ?? null;
     $approved = isset($input['approved']) ? (int)$input['approved'] : null;
     
@@ -83,7 +84,7 @@ if ($method === 'PUT') {
 
 // DELETE - Remove member from committee
 if ($method === 'DELETE') {
-    $memberCommitteeId = $_GET['id'] ?? null;
+    $memberCommitteeId = $input['memberCommitteeId'] ?? ($_GET['id'] ?? null);
     
     if (!$memberCommitteeId) {
         http_response_code(400);
