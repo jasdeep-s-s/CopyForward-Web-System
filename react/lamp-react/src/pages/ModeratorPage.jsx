@@ -16,6 +16,8 @@ function ModeratorPage() {
   // Items state
   const [items, setItems] = useState([])
   const [itemStatusFilter, setItemStatusFilter] = useState('')
+  const [viewingItem, setViewingItem] = useState(null)
+  const [itemDetails, setItemDetails] = useState(null)
   
   // Members state
   const [members, setMembers] = useState([])
@@ -138,6 +140,24 @@ function ModeratorPage() {
     } catch (e) {
       setError(e.message)
     }
+  }
+
+  async function viewItemDetails(itemId) {
+    setError('')
+    try {
+      const res = await fetch(`/item_details.php?id=${itemId}`)
+      if (!res.ok) throw new Error('Failed to load item details')
+      const data = await res.json()
+      setItemDetails(data)
+      setViewingItem(itemId)
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
+  function closeItemDetails() {
+    setViewingItem(null)
+    setItemDetails(null)
   }
 
   // Members functions
@@ -550,6 +570,13 @@ function ModeratorPage() {
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>{item.Status}</td>
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>{item.UploadDate ? new Date(item.UploadDate).toLocaleDateString() : ''}</td>
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>
+                    <button 
+                      className="btn" 
+                      style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px' }} 
+                      onClick={() => viewItemDetails(item.ItemID)}
+                    >
+                      View Details
+                    </button>
                     {item.Status === 'Under Review (Upload)' && (
                       <>
                         <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#23d160', color: 'white' }} onClick={() => updateItemStatus(item.ItemID, 'Available')}>Approve</button>
@@ -563,6 +590,96 @@ function ModeratorPage() {
             </tbody>
           </table>
           {items.length === 0 && <div style={{ marginTop: 12 }}>No items found</div>}
+          
+          {/* Item Details Modal */}
+          {viewingItem && itemDetails && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 1000
+            }}>
+              <div style={{
+                backgroundColor: 'white',
+                padding: 24,
+                borderRadius: 8,
+                maxWidth: '800px',
+                maxHeight: '90vh',
+                overflow: 'auto',
+                width: '90%'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <h2 style={{ margin: 0 }}>{itemDetails.Title}</h2>
+                  <button 
+                    className="btn" 
+                    onClick={closeItemDetails}
+                    style={{ fontSize: '1.2rem', padding: '4px 12px' }}
+                  >
+                    ×
+                  </button>
+                </div>
+                
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ marginBottom: 8 }}><strong>Author:</strong> {itemDetails.AuthorName || itemDetails.AuthorID}</div>
+                  <div style={{ marginBottom: 8 }}><strong>Type:</strong> {itemDetails.Type}</div>
+                  <div style={{ marginBottom: 8 }}><strong>Status:</strong> {itemDetails.Status}</div>
+                  <div style={{ marginBottom: 8 }}><strong>Upload Date:</strong> {itemDetails.UploadDate ? new Date(itemDetails.UploadDate).toLocaleDateString() + ' ' + new Date(itemDetails.UploadDate).toLocaleTimeString() : ''}</div>
+                  {itemDetails.PublicationDate && <div style={{ marginBottom: 8 }}><strong>Publication Date:</strong> {new Date(itemDetails.PublicationDate).toLocaleDateString()}</div>}
+                  {itemDetails.DOI && <div style={{ marginBottom: 8 }}><strong>DOI:</strong> {itemDetails.DOI}</div>}
+                  {itemDetails.Volume && <div style={{ marginBottom: 8 }}><strong>Volume:</strong> {itemDetails.Volume}</div>}
+                  {itemDetails.Issue && <div style={{ marginBottom: 8 }}><strong>Issue:</strong> {itemDetails.Issue}</div>}
+                  {itemDetails.PageStart && itemDetails.PageEnd && (
+                    <div style={{ marginBottom: 8 }}><strong>Pages:</strong> {itemDetails.PageStart}-{itemDetails.PageEnd}</div>
+                  )}
+                </div>
+                
+                <div style={{ marginBottom: 16 }}>
+                  <h3>Content:</h3>
+                  <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{itemDetails.Content || 'No content provided'}</p>
+                </div>
+                
+                {itemDetails.FilePath && (
+                  <div style={{ marginBottom: 16 }}>
+                    <strong>File:</strong> <a href={itemDetails.FilePath} target="_blank" rel="noopener noreferrer" style={{ color: '#3273dc' }}>Download PDF</a>
+                  </div>
+                )}
+                
+                <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #ddd', display: 'flex', gap: 8 }}>
+                  {itemDetails.Status === 'Under Review (Upload)' && (
+                    <>
+                      <button 
+                        className="btn" 
+                        style={{ backgroundColor: '#23d160', color: 'white' }} 
+                        onClick={() => {
+                          updateItemStatus(itemDetails.ItemID, 'Available')
+                          closeItemDetails()
+                        }}
+                      >
+                        Approve
+                      </button>
+                      <button 
+                        className="btn" 
+                        style={{ backgroundColor: '#ff3860', color: 'white' }} 
+                        onClick={() => {
+                          updateItemStatus(itemDetails.ItemID, 'Removed')
+                          closeItemDetails()
+                        }}
+                      >
+                        Decline
+                      </button>
+                    </>
+                  )}
+                  <button className="btn" onClick={closeItemDetails}>Close</button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
