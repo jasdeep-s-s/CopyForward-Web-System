@@ -19,10 +19,10 @@ CopyForward (CFP) is a web-based research repository system that allows authors 
 - **Database Connection**: `db.php` - Database connection via MySQLi (uses environment variables)
 - **Authentication**: `login.php`, `signup.php`, `logout.php` - Session-based auth with password hashing
 - **API Endpoints**: Individual PHP files serve as REST-like endpoints (e.g., `items.php`, `members.php`, `donations.php`)
-- **Database**: `CFP` database with tables for Members, Items, Comments, Downloads, Donations, Committees, Discussions, etc.
+- **Database**: `ovc353_2` database with tables for Members, Items, Comments, Downloads, Donations, Committees, Discussions, etc.
 
 #### Frontend (React in `react/lamp-react/`)
-- **Build Output**: Vite builds to `www/react/` directory
+- **Build Output**: Vite builds to `www/` directory
 - **Routing**: Hash-based routing in `App.jsx` (e.g., `#/items/123`, `#/authors`)
 - **State Management**: useState/useEffect hooks, localStorage for auth state
 - **API Communication**: Direct fetch calls to PHP endpoints (no centralized API client)
@@ -68,7 +68,7 @@ npm install
 # Development server (runs on Vite's default port, typically 5173)
 npm run dev
 
-# Build for production (outputs to www/react/)
+# Build for production (outputs to www/)
 npm run build
 
 # Lint code
@@ -88,14 +88,14 @@ npm run preview
 ```powershell
 # Copy SQL file into container and import
 docker cp database_new.sql lamp-database:/tmp/database_new.sql
-docker exec -i lamp-database mysql -uroot -ptiger CFP < database_new.sql
+docker exec -i lamp-database mysql -uroot -ptiger ovc353_2 < database_new.sql
 
 # Or via phpMyAdmin Import tab
 ```
 
 **Run SQL from command line**:
 ```powershell
-docker exec -it lamp-database mysql -uroot -ptiger CFP
+docker exec -it lamp-database mysql -uroot -ptiger ovc353_2
 ```
 
 ### Access Points
@@ -118,7 +118,7 @@ docker exec -it lamp-database mysql -uroot -ptiger CFP
 1. Create component in `react/lamp-react/src/pages/`
 2. Add route matching in `App.jsx` (hash-based routing)
 3. Use fetch to call PHP endpoints: `await fetch('/endpoint.php')`
-4. Build and deploy: `npm run build` (outputs to `www/react/`)
+4. Build and deploy: `npm run build` (outputs to `www/`)
 
 ### Database Schema Changes
 1. Modify `database_new.sql` with new tables/columns
@@ -144,12 +144,14 @@ docker exec -it lamp-database mysql -uroot -ptiger CFP
 - `HOST_MACHINE_PMA_PORT` (default: 8080)
 
 **Database Credentials**:
-- `MYSQL_ROOT_PASSWORD` (default: tiger)
-- `MYSQL_USER` (default: docker)
-- `MYSQL_PASSWORD` (default: docker)
-- `MYSQL_DATABASE` (default: docker, but code uses CFP)
+- `MYSQL_HOST` (local: database, AITS: ovc353.encs.concordia.ca)
+- `MYSQL_USER` (local: docker, AITS: ovc353_2)
+- `MYSQL_PASSWORD` (local: docker, AITS: darkjade89)
+- `MYSQL_ROOT_PASSWORD` (local: tiger)
+- `MYSQL_DATABASE` (local & AITS: ovc353_2 )
+- `MYSQL_PORT` (local & AITS: 3306 )
 
-**Note**: The application uses database name `CFP`, not `docker` as specified in `.env`
+**Note**: The application uses database name `ovc353_2` locally, as well as on AITS
 
 ## Important Architectural Notes
 
@@ -198,7 +200,7 @@ CopyForward-Web-System/
 │   │   ├── App.jsx        # Main app with routing
 │   │   └── Header.jsx     # Navigation header
 │   ├── package.json
-│   └── vite.config.js     # Builds to www/react/
+│   └── vite.config.js     # Removes old files and builds new static files to www/
 ├── www/                   # PHP backend & built frontend
 │   ├── assets/            # Static assets (CSS, images)
 │   ├── react/             # Unused/deprecated
@@ -234,11 +236,11 @@ If ports 80, 443, 3306, or 8080 are in use, modify `.env` port variables and res
 ### Database Connection Errors
 - Ensure database container is running: `docker-compose ps`
 - Check credentials in `.env` match `db.php`
-- Database name is hardcoded as `CFP` in `db.php`
+- Database name is hardcoded as `ovc353_2` in `db.php`
 
 ### React Build Not Showing
 - Run `npm run build` in `react/lamp-react/`
-- Verify output in `www/react/`
+- Verify output in `www/`
 - Clear browser cache
 
 ### MySQL Events Not Running
