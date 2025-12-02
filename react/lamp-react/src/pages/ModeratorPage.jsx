@@ -283,7 +283,7 @@ function ModeratorPage() {
 
   async function toggleCharityApproval(charityId, currentApproved) {
     try {
-      const res = await requestWithOverride('/mod_charities.php', 'PUT', { charityId, approved: currentApproved ? 0 : 1 })
+      const res = await requestWithOverride('/mod_charities.php', 'PUT', { charityId, approved: Number(currentApproved) ? 0 : 1 })
       if (!res.ok) throw new Error('Failed to update charity')
       setSuccess('Charity updated')
       loadCharities()
@@ -329,7 +329,7 @@ function ModeratorPage() {
     setEditingCharity(charity)
     setCharityFormData(charity ? {
       name: charity.Name,
-      approved: charity.Approved ? 1 : 0
+      approved: Number(charity.Approved) ? 1 : 0
     } : { approved: 0 })
     setShowCharityForm(true)
     setError('')
@@ -800,11 +800,11 @@ function ModeratorPage() {
                 <tr key={ch.ChildrenCharityID}>
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>{ch.ChildrenCharityID}</td>
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>{ch.Name}</td>
-                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{ch.Approved ? 'Yes' : 'No'}</td>
+                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{Number(ch.Approved) ? 'Yes' : 'No'}</td>
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>{ch.SuggestedByUsername || (ch.SuggestedBy ? `User ${ch.SuggestedBy}` : '-')}</td>
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>
                     <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px' }} onClick={() => toggleCharityApproval(ch.ChildrenCharityID, ch.Approved)}>
-                      {ch.Approved ? 'Unapprove' : 'Approve'}
+                      {Number(ch.Approved) ? 'Unapprove' : 'Approve'}
                     </button>
                     <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px' }} onClick={() => openCharityForm(ch)}>Edit</button>
                     <button className="btn" style={{ fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#ff3860', color: 'white' }} onClick={() => deleteCharity(ch.ChildrenCharityID)}>Delete</button>
