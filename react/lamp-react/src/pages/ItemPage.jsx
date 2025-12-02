@@ -261,13 +261,17 @@ function ItemPage ({ itemId }) {
 								<p>If you are the author and believe removal was incorrect, you may appeal to the appeals committee.</p>
 								<div style={{ display: 'flex', gap: 8 }}>
 									<button className="btn" onClick={handleAppeal}>Appeal</button>
-									<button className="btn" onClick={() => { window.location.hash = `#/items/${item.id}/discussions` }}>Discussions</button>
+									{localStorage.getItem('logged_in_id') ? (
+										<button className="btn" onClick={() => { window.location.hash = `#/items/${item.id}/discussions` }}>Discussions</button>
+									) : null}
 								</div>
 							</div>
 						) : (
 							<div>
 								<p>This item has been removed.</p>
-								<button className="btn" onClick={() => { window.location.hash = `#/items/${item.id}/discussions` }}>Discussions</button>
+								{localStorage.getItem('logged_in_id') ? (
+									<button className="btn" onClick={() => { window.location.hash = `#/items/${item.id}/discussions` }}>Discussions</button>
+								) : null}
 							</div>
 						)}
 					</div>
@@ -321,9 +325,7 @@ function ItemPage ({ itemId }) {
 			<div className="item-actions">
 				{localStorage.getItem('logged_in_id') ? (
 					<button className="btn donate" onClick={() => { window.location.hash = `#/items/${item.id}/donate` }}>Donate</button>
-				) : (
-					<button className="btn donate" disabled title="Sign in to donate">Donate</button>
-				)}
+				) : null}
 				{localStorage.getItem('logged_in_id') ? (
 					<button
 						className="btn download"
@@ -365,7 +367,9 @@ function ItemPage ({ itemId }) {
 				{localStorage.getItem('logged_in_id') && item.authorMemberId && Number(localStorage.getItem('logged_in_id')) === Number(item.authorMemberId) && hasActivePlagiarismDebate ? (
 					<button className="btn" onClick={handleAppeal}>Appeal</button>
 				) : null}
-				<button className="btn report" onClick={handleReport}>Report</button>
+				{localStorage.getItem('logged_in_id') ? (
+					<button className="btn report" onClick={handleReport}>Report</button>
+				) : null}
 			</div>
 
 			<section className="versions">

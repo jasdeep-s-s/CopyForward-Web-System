@@ -65,7 +65,8 @@ function MemberPage ({ memberId: propMemberId }) {
 
   useEffect(() => {
     if (!member || !member.ORCID) return
-    if (localStorage.getItem('logged_in_role') !== 'author') return
+    const storedRole = (localStorage.getItem('logged_in_role') || '').trim().toLowerCase()
+    if (storedRole !== 'author') return
     const orcid = member.ORCID
     fetch(`/member_pending_items.php?orcid=${encodeURIComponent(orcid)}`)
       .then(r => r.json())
@@ -137,7 +138,7 @@ function MemberPage ({ memberId: propMemberId }) {
   const headerTitle = member ? (member.Username ? `${member.Username}'s Profile` : (member.Name ? `${member.Name}'s Profile` : 'Member Profile')) : 'Member Profile'
   const loggedId = Number(localStorage.getItem('logged_in_id'))
   const isOwn = member && Number(member.MemberID) === loggedId
-  const role = localStorage.getItem('logged_in_role') || ''
+  const role = (localStorage.getItem('logged_in_role') || '').trim().toLowerCase()
 
   return (
     <div className="item-page">
@@ -326,7 +327,7 @@ function MemberPage ({ memberId: propMemberId }) {
         </section>
       ) : null}
 
-      {member && member.ORCID && isOwn && role === 'author' ? (
+      {member && member.ORCID && isOwn && (role === 'Author' || role === 'author') ? (
         <section className="versions" style={{ marginTop: 20 }}>
           <h2>Pending Approval</h2>
           <div style={{ marginTop: 8 }}>
