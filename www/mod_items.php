@@ -7,6 +7,11 @@ header('Content-Type: application/json');
 
 require __DIR__ . '/db.php';
 
+$rawBody = file_get_contents('php://input');
+$input = json_decode($rawBody, true) ?: [];
+$override = $_POST['_method'] ?? ($input['_method'] ?? null);
+$method = $override ? strtoupper($override) : $_SERVER['REQUEST_METHOD'];
+
 // Check if user is logged in and is a moderator
 $memberId = $_SESSION['member_id'] ?? null;
 $role = $_SESSION['role'] ?? null;
@@ -16,8 +21,6 @@ if (!$memberId || $role !== 'Moderator') {
     echo json_encode(['success' => false, 'error' => 'Access denied. Moderator access required.']);
     exit;
 }
-
-$method = $_SERVER['REQUEST_METHOD'];
 
 // GET - List all items with optional status filter
 if ($method === 'GET') {
@@ -82,8 +85,6 @@ if ($method === 'GET') {
 
 // PUT - Update item (approve/decline content)
 if ($method === 'PUT') {
-    $input = json_decode(file_get_contents('php://input'), true);
-    
     $itemId = $input['itemId'] ?? null;
     $status = $input['status'] ?? null;
     $title = $input['title'] ?? null;
@@ -163,7 +164,7 @@ if ($method === 'PUT') {
 
 // DELETE - Delete item
 if ($method === 'DELETE') {
-    $itemId = $_GET['id'] ?? null;
+    $itemId = $input['itemId'] ?? ($_GET['id'] ?? null);
     
     if (!$itemId) {
         http_response_code(400);

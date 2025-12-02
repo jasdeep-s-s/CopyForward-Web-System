@@ -7,9 +7,9 @@ ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
 $dbHost = 'database';
-$dbUser = getenv('MYSQL_USER') ?: 'docker';
-$dbPass = getenv('MYSQL_PASSWORD') ?: 'docker';
-$dbName = 'CFP';
+$dbUser = 'docker';
+$dbPass = 'docker';
+$dbName = 'ovc353_2';
 $dbPort = 3306;
 
 $mysqli = @new mysqli($dbHost, $dbUser, $dbPass, $dbName, $dbPort);

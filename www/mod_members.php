@@ -7,6 +7,11 @@ header('Content-Type: application/json');
 
 require __DIR__ . '/db.php';
 
+$rawBody = file_get_contents('php://input');
+$input = json_decode($rawBody, true) ?: [];
+$override = $_POST['_method'] ?? ($input['_method'] ?? null);
+$method = $override ? strtoupper($override) : $_SERVER['REQUEST_METHOD'];
+
 // Check if user is logged in and is a moderator
 $memberId = $_SESSION['member_id'] ?? null;
 $role = $_SESSION['role'] ?? null;
@@ -16,8 +21,6 @@ if (!$memberId || $role !== 'Moderator') {
     echo json_encode(['success' => false, 'error' => 'Access denied. Moderator access required.']);
     exit;
 }
-
-$method = $_SERVER['REQUEST_METHOD'];
 
 // GET - List all members with optional donations data
 if ($method === 'GET') {
@@ -75,8 +78,6 @@ if ($method === 'GET') {
 
 // POST - Create new member
 if ($method === 'POST') {
-    $input = json_decode(file_get_contents('php://input'), true);
-    
     $name = $input['name'] ?? null;
     $username = $input['username'] ?? null;
     $email = $input['email'] ?? null;
@@ -128,8 +129,6 @@ if ($method === 'POST') {
 
 // PUT - Update member (including role changes)
 if ($method === 'PUT') {
-    $input = json_decode(file_get_contents('php://input'), true);
-    
     $targetMemberId = $input['memberId'] ?? null;
     $name = $input['name'] ?? null;
     $role = $input['role'] ?? null;
@@ -222,7 +221,7 @@ if ($method === 'PUT') {
 
 // DELETE - Delete member
 if ($method === 'DELETE') {
-    $targetMemberId = $_GET['id'] ?? null;
+    $targetMemberId = $input['memberId'] ?? ($_GET['id'] ?? null);
     
     if (!$targetMemberId) {
         http_response_code(400);

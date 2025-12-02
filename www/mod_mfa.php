@@ -8,6 +8,11 @@ header('Content-Type: application/json');
 require __DIR__ . '/db.php';
 require_once __DIR__ . '/mfa_lib.php';
 
+$rawBody = file_get_contents('php://input');
+$input = json_decode($rawBody, true) ?: [];
+$override = $_POST['_method'] ?? ($input['_method'] ?? null);
+$method = $override ? strtoupper($override) : $_SERVER['REQUEST_METHOD'];
+
 // Check if user is logged in and is a moderator
 $memberId = $_SESSION['member_id'] ?? null;
 $role = $_SESSION['role'] ?? null;
@@ -17,8 +22,6 @@ if (!$memberId || $role !== 'Moderator') {
     echo json_encode(['success' => false, 'error' => 'Access denied. Moderator access required.']);
     exit;
 }
-
-$method = $_SERVER['REQUEST_METHOD'];
 
 // GET - List all MFA matrices with member details
 if ($method === 'GET') {
@@ -47,8 +50,6 @@ if ($method === 'GET') {
 
 // PUT - Regenerate MFA matrix for a user (by matrix id or user id)
 if ($method === 'PUT') {
-    $input = json_decode(file_get_contents('php://input'), true) ?: [];
-    
     $mfaMatrixId = $input['mfaMatrixId'] ?? null;
     $targetUserId = isset($input['userId']) ? (int)$input['userId'] : null;
     $notifyUser = array_key_exists('notifyUser', $input) ? (bool)$input['notifyUser'] : true; // default notify
@@ -91,8 +92,6 @@ if ($method === 'PUT') {
 
 // POST - Create new MFA matrix for a user
 if ($method === 'POST') {
-    $input = json_decode(file_get_contents('php://input'), true) ?: [];
-    
     $userId = $input['userId'] ?? null;
     
     if (!$userId) {
