@@ -1,5 +1,6 @@
 <?php
 // Item Details API - Get full item information
+// By Jasdeep S. Sandhu, 40266557
 session_start();
 header('Content-Type: application/json');
 
