@@ -108,6 +108,9 @@ if ($method === 'PUT') {
             echo json_encode(['success' => false, 'error' => 'Invalid status']);
             exit;
         }
+        if ($status === 'Removed') {
+            $status = 'Deleted';
+        }
         $updates[] = "Status = ?";
         $types .= 's';
         $values[] = $status;
