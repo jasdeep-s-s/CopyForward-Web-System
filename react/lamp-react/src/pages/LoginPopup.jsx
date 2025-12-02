@@ -44,7 +44,7 @@ export default function LoginModal({ onClose, onAuth }) {
 
     // keep compatibility with existing localStorage listeners
     localStorage.setItem('logged_in_id', String(data.user.id))
-    localStorage.setItem('logged_in_role', String(data.user.role || '').trim().toLowerCase())
+    localStorage.setItem('logged_in_role', String(data.user.role || '').trim())
     localStorage.setItem('logged_in_email', data.user.email || '')
     onAuth?.(data.user)
     onClose()
