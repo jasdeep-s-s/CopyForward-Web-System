@@ -61,11 +61,18 @@ function CommitteesPage() {
     setError('')
     try {
       const res = await fetch('/committees_public.php?discussionId=' + discussionId)
-      if (!res.ok) throw new Error('Failed to load discussion')
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to load discussion')
+      }
       const data = await res.json()
+      if (data.success === false) {
+        throw new Error(data.error || 'Access denied')
+      }
       setSelectedDiscussion(data)
     } catch (e) {
       setError(e.message)
+      setSelectedDiscussion(null)
     }
   }
 
@@ -394,7 +401,14 @@ function CommitteesPage() {
               ))}
             </div>
           ) : (
-            <div style={{ color: 'gray', fontStyle: 'italic' }}>No discussions in this committee</div>
+            <div style={{ marginTop: 12, padding: 16, border: '1px solid #ddd', backgroundColor: '#f9f9f9' }}>
+              <div style={{ fontWeight: 'bold', marginBottom: 8 }}>No discussions available</div>
+              <p style={{ margin: 0, color: '#666' }}>
+                {selectedCommittee.IsApproved 
+                  ? 'You can only view discussions for items you have downloaded. Download items from the main page to participate in discussions about them.'
+                  : 'You must be an approved member of this committee to view discussions.'}
+              </p>
+            </div>
           )}
         </section>
       </div>
