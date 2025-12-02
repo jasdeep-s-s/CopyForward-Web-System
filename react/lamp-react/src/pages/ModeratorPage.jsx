@@ -420,6 +420,21 @@ function ModeratorPage() {
     }
   }
 
+  async function regenerateExpiringMatrices() {
+    if (!confirm('Regenerate all expired/expiring matrices (next 48h)? Users will be notified.')) return
+    try {
+      setError('')
+      const res = await fetch('/mfa_regenerate_expiring.php', { method: 'POST' })
+      if (!res.ok) throw new Error('Failed to regenerate expiring matrices')
+      const data = await res.json()
+      const regenerated = typeof data.regenerated === 'number' ? data.regenerated : 0
+      setSuccess(`Regenerated ${regenerated} expiring matrices`)
+      loadMfaMatrices()
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
   return (
     <div className="item-page">
       <header className="item-header">
@@ -823,7 +838,12 @@ function ModeratorPage() {
       {/* MFA Matrices Tab */}
       {activeTab === 'mfa' && !loading && (
         <div style={{ marginTop: 20 }}>
-          <h2>MFA Matrices Management</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2>MFA Matrices Management</h2>
+            <button className="btn" onClick={regenerateExpiringMatrices}>
+              Regenerate All Expiring
+            </button>
+          </div>
           <table style={{ width: '100%', marginTop: 12, borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ backgroundColor: '#f5f5f5' }}>

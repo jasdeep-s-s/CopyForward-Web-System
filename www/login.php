@@ -15,6 +15,7 @@ function respond($status, $payload)
 }
 
 require __DIR__ . '/db.php';
+require_once __DIR__ . '/mfa_lib.php';
 
 $stmt = $mysqli->prepare('SELECT MemberID, Username, Role, PrimaryEmail, Password FROM Member WHERE Username = ?');
 $stmt->bind_param('s', $username);
@@ -35,6 +36,11 @@ session_regenerate_id(true);
 $_SESSION['member_id'] = (int)$row['MemberID'];
 $_SESSION['role']      = $row['Role'];
 $_SESSION['email']     = $row['PrimaryEmail'];
+
+// On moderator login, trigger expiring-matrix notifications for the moderation team.
+if ($row['Role'] === 'Moderator') {
+    mfa_notify_mods_about_expiring($mysqli, new DateTimeImmutable('now'));
+}
 
 $matrixInfo = null;
 $matrixStmt = $mysqli->prepare('SELECT Matrix, ExpiryDate, CreationDate, recentlyUpdated FROM MFAMatrix WHERE UserID = ? ORDER BY CreationDate DESC LIMIT 1');
