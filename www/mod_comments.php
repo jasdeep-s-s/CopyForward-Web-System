@@ -7,6 +7,11 @@ header('Content-Type: application/json');
 
 require __DIR__ . '/db.php';
 
+$rawBody = file_get_contents('php://input');
+$input = json_decode($rawBody, true) ?: [];
+$override = $_POST['_method'] ?? ($input['_method'] ?? null);
+$method = $override ? strtoupper($override) : $_SERVER['REQUEST_METHOD'];
+
 // Check if user is logged in and is a moderator
 $memberId = $_SESSION['member_id'] ?? null;
 $role = $_SESSION['role'] ?? null;
@@ -16,8 +21,6 @@ if (!$memberId || $role !== 'Moderator') {
     echo json_encode(['success' => false, 'error' => 'Access denied. Moderator access required.']);
     exit;
 }
-
-$method = $_SERVER['REQUEST_METHOD'];
 
 // GET - List all comments (with optional filters)
 if ($method === 'GET') {
@@ -58,8 +61,6 @@ if ($method === 'GET') {
 
 // POST - Create comment (moderator can create comments)
 if ($method === 'POST') {
-    $input = json_decode(file_get_contents('php://input'), true);
-    
     $itemId = $input['itemId'] ?? null;
     $comment = $input['comment'] ?? null;
     $private = isset($input['private']) ? (int)$input['private'] : 0;
@@ -86,8 +87,6 @@ if ($method === 'POST') {
 
 // PUT - Update comment (approve/decline is done by marking as Private or deleting)
 if ($method === 'PUT') {
-    $input = json_decode(file_get_contents('php://input'), true);
-    
     $commentId = $input['commentId'] ?? null;
     $private = isset($input['private']) ? (int)$input['private'] : null;
     $comment = $input['comment'] ?? null;
@@ -139,7 +138,7 @@ if ($method === 'PUT') {
 
 // DELETE - Delete comment
 if ($method === 'DELETE') {
-    $commentId = $_GET['id'] ?? null;
+    $commentId = $input['commentId'] ?? ($_GET['id'] ?? null);
     
     if (!$commentId) {
         http_response_code(400);

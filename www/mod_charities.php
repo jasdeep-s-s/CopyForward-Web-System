@@ -7,6 +7,11 @@ header('Content-Type: application/json');
 
 require __DIR__ . '/db.php';
 
+$rawBody = file_get_contents('php://input');
+$input = json_decode($rawBody, true) ?: [];
+$override = $_POST['_method'] ?? ($input['_method'] ?? null);
+$method = $override ? strtoupper($override) : $_SERVER['REQUEST_METHOD'];
+
 // Check if user is logged in and is a moderator
 $memberId = $_SESSION['member_id'] ?? null;
 $role = $_SESSION['role'] ?? null;
@@ -16,8 +21,6 @@ if (!$memberId || $role !== 'Moderator') {
     echo json_encode(['success' => false, 'error' => 'Access denied. Moderator access required.']);
     exit;
 }
-
-$method = $_SERVER['REQUEST_METHOD'];
 
 // GET - List all charities
 if ($method === 'GET') {
@@ -45,8 +48,6 @@ if ($method === 'GET') {
 
 // POST - Create new charity
 if ($method === 'POST') {
-    $input = json_decode(file_get_contents('php://input'), true);
-    
     $name = $input['name'] ?? null;
     $approved = isset($input['approved']) ? (int)$input['approved'] : 0;
     
@@ -71,8 +72,6 @@ if ($method === 'POST') {
 
 // PUT - Update charity (approve/decline)
 if ($method === 'PUT') {
-    $input = json_decode(file_get_contents('php://input'), true);
-    
     $charityId = $input['charityId'] ?? null;
     $name = $input['name'] ?? null;
     $approved = isset($input['approved']) ? (int)$input['approved'] : null;
@@ -124,7 +123,7 @@ if ($method === 'PUT') {
 
 // DELETE - Delete charity
 if ($method === 'DELETE') {
-    $charityId = $_GET['id'] ?? null;
+    $charityId = $input['charityId'] ?? ($_GET['id'] ?? null);
     
     if (!$charityId) {
         http_response_code(400);
