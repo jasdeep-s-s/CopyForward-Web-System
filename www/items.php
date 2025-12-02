@@ -21,11 +21,17 @@ if ($mysqli->connect_errno) {
 
 $search = isset($_GET['q']) ? trim($_GET['q']) : '';
 $topic = isset($_GET['topic']) ? trim($_GET['topic']) : '';
-$limit = isset($_GET['limit']) ? intval($_GET['limit']) : 50;
+$limit = isset($_GET['limit']) ? intval($_GET['limit']) : 500;
 $offset = isset($_GET['offset']) ? intval($_GET['offset']) : 0;
+$all = isset($_GET['all']) && $_GET['all'] === '1';
 
-if ($limit <= 0) $limit = 50;
-if ($limit > 200) $limit = 200;
+if ($all) {
+    $limit = 1000;
+    $offset = 0;
+}
+
+if ($limit <= 0) $limit = 500;
+if ($limit > 1000) $limit = 1000;
 if ($offset < 0) $offset = 0;
 
 $where = [];
