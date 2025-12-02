@@ -124,7 +124,7 @@ function ItemPage ({ itemId }) {
 			comment: text
 		}
 		if (replyToId) payload.parentId = replyToId
-		if (replyToId && privateReply) payload.private = true
+		if (privateReply) payload.private = true
 
 		fetch('/post_comment.php', {
 			method: 'POST',
@@ -405,10 +405,10 @@ function ItemPage ({ itemId }) {
 							<button type="button" style={{ marginLeft: 8 }} onClick={() => { setReplyToId(null); setReplyToAuthor(''); setPrivateReply(false) }}>Cancel</button>
 						</div>
 					) : null}
-					{replyToId && item && item.authorMemberId && Number(localStorage.getItem('logged_in_id')) === Number(item.authorMemberId) ? (
+					{localStorage.getItem('logged_in_id') ? (
 						<div style={{ marginBottom: 8 }}>
 							<label style={{ fontSize: '0.9rem' }}>
-								<input type="checkbox" checked={privateReply} onChange={e => setPrivateReply(e.target.checked)} /> Private reply
+								<input type="checkbox" checked={privateReply} onChange={e => setPrivateReply(e.target.checked)} /> Private
 							</label>
 						</div>
 					) : null}
