@@ -18,8 +18,10 @@ function Homepage () {
     setLoading(true)
     setError('')
     try {
-      const url = term ? `/items.php?q=${encodeURIComponent(term)}` : '/items.php'
-      const res = await fetch(url)
+      const params = new URLSearchParams()
+      if (term) params.set('q', term)
+      params.set('limit', '1000')
+      const res = await fetch(`/items.php?${params.toString()}`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       const normalized = Array.isArray(data)
