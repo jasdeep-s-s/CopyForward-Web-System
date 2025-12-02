@@ -5,11 +5,11 @@ header('Content-Type: application/json');
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
-$dbHost = getenv('MYSQL_HOST') ?: 'database';
-$dbUser = getenv('MYSQL_USER') ?: 'docker';
-$dbPass = getenv('MYSQL_PASSWORD') ?: 'docker';
-$dbName = getenv('MYSQL_DATABASE') ?: 'ovc353_2';
-$dbPort = getenv('MYSQL_PORT') ?: 3306;
+$dbHost = 'database';
+$dbUser = 'docker';
+$dbPass = 'docker';
+$dbName = 'ovc353_2';
+$dbPort = 3306;
 
 $mysqli = @new mysqli($dbHost, $dbUser, $dbPass, $dbName, $dbPort);
 
