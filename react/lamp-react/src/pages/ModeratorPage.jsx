@@ -854,10 +854,9 @@ function ModeratorPage() {
                       <td style={{ padding: 8, border: '1px solid #ddd' }}>{cm.PrimaryEmail}</td>
                       <td style={{ padding: 8, border: '1px solid #ddd' }}>{cm.Approved ? 'Approved' : 'Pending'}</td>
                       <td style={{ padding: 8, border: '1px solid #ddd' }}>
-                        {!cm.Approved && (
+                        {!cm.Approved ? (
                           <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#23d160', color: 'white' }} onClick={() => approveCommitteeMember(cm.MemberCommitteeID, true)}>Approve</button>
-                        )}
-                        {cm.Approved && (
+                        ) : (
                           <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#ffdd57' }} onClick={() => approveCommitteeMember(cm.MemberCommitteeID, false)}>Unapprove</button>
                         )}
                         <button className="btn" style={{ fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#ff3860', color: 'white' }} onClick={() => removeCommitteeMember(cm.MemberCommitteeID)}>Remove</button>
