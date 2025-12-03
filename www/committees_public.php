@@ -92,6 +92,25 @@ if ($method === 'GET' && isset($_GET['discussionId'])) {
     
     $discussion['IsCommitteeMember'] = $memberRow && $memberRow['Approved'] ? true : false;
     
+    // Check if user has downloaded the item (required to view discussion)
+    $checkDownloadAccess = $mysqli->prepare("SELECT 1 FROM Download WHERE DownloaderID = ? AND ItemID = ? LIMIT 1");
+    $checkDownloadAccess->bind_param('ii', $memberId, $discussion['ItemID']);
+    $checkDownloadAccess->execute();
+    $downloadAccessResult = $checkDownloadAccess->get_result();
+    $hasDownloadedItem = $downloadAccessResult->num_rows > 0;
+    
+    // User must be an approved committee member AND have downloaded the item
+    if (!$discussion['IsCommitteeMember'] || !$hasDownloadedItem) {
+        http_response_code(403);
+        echo json_encode([
+            'success' => false, 
+            'error' => 'Access denied. You must be an approved committee member and have downloaded the item to view this discussion.',
+            'isCommitteeMember' => $discussion['IsCommitteeMember'],
+            'hasDownloaded' => $hasDownloadedItem
+        ]);
+        exit;
+    }
+    
     // Check if user is the item author
     $discussion['IsAuthor'] = ($discussion['AuthorMemberID'] == $memberId);
     
@@ -158,8 +177,8 @@ if ($method === 'POST') {
         exit;
     }
     
-    // Check if user is approved committee member
-    $checkQuery = "SELECT mc.Approved, d.CommitteeID 
+    // Check if user is approved committee member AND has downloaded the item
+    $checkQuery = "SELECT mc.Approved, d.CommitteeID, d.ItemID
                    FROM Discussion d
                    JOIN MemberCommittee mc ON d.CommitteeID = mc.CommitteeID
                    WHERE d.DiscussionID = ? AND mc.MemberID = ? AND mc.Approved = 1";
@@ -167,10 +186,23 @@ if ($method === 'POST') {
     $checkStmt->bind_param('ii', $discussionId, $memberId);
     $checkStmt->execute();
     $checkResult = $checkStmt->get_result();
+    $checkRow = $checkResult->fetch_assoc();
     
-    if ($checkResult->num_rows === 0) {
+    if (!$checkRow) {
         http_response_code(403);
         echo json_encode(['success' => false, 'error' => 'Only approved committee members can post messages']);
+        exit;
+    }
+    
+    // Verify user has downloaded the item
+    $downloadCheckStmt = $mysqli->prepare("SELECT 1 FROM Download WHERE DownloaderID = ? AND ItemID = ? LIMIT 1");
+    $downloadCheckStmt->bind_param('ii', $memberId, $checkRow['ItemID']);
+    $downloadCheckStmt->execute();
+    $downloadCheckResult = $downloadCheckStmt->get_result();
+    
+    if ($downloadCheckResult->num_rows === 0) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'error' => 'You must download the item before participating in this discussion']);
         exit;
     }
     
