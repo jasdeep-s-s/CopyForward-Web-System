@@ -131,7 +131,7 @@ function ModeratorPage() {
   }
 
   async function deleteItem(itemId) {
-    if (!confirm('Delete this item? This will also delete related comments, downloads, and donations.')) return
+    if (!confirm('Delete this item? This will mark the item as deleted and will not be considered in the statistics.')) return
     try {
       const res = await requestWithOverride('/mod_items.php', 'DELETE', { itemId })
       if (!res.ok) throw new Error('Failed to delete item')
@@ -303,7 +303,7 @@ function ModeratorPage() {
 
   async function toggleCharityApproval(charityId, currentApproved) {
     try {
-      const res = await requestWithOverride('/mod_charities.php', 'PUT', { charityId, approved: currentApproved ? 0 : 1 })
+      const res = await requestWithOverride('/mod_charities.php', 'PUT', { charityId, approved: Number(currentApproved) ? 0 : 1 })
       if (!res.ok) throw new Error('Failed to update charity')
       setSuccess('Charity updated')
       loadCharities()
@@ -349,7 +349,7 @@ function ModeratorPage() {
     setEditingCharity(charity)
     setCharityFormData(charity ? {
       name: charity.Name,
-      approved: charity.Approved ? 1 : 0
+      approved: Number(charity.Approved) ? 1 : 0
     } : { approved: 0 })
     setShowCharityForm(true)
     setError('')
@@ -516,10 +516,10 @@ function ModeratorPage() {
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>{c.CommentorUsername || c.CommentorID}</td>
                   <td style={{ padding: 8, border: '1px solid #ddd', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.Comment}</td>
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>{c.Date ? new Date(c.Date).toLocaleDateString() : ''}</td>
-                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{c.Private ? 'No' : 'Yes'}</td>
+                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{Number(c.Private) ? 'Yes' : 'No'}</td>
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>
-                    <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px' }} onClick={() => toggleCommentPrivacy(c.CommentID, c.Private)}>
-                      {c.Private ? 'Make Public' : 'Make Private'}
+                    <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px' }} onClick={() => toggleCommentPrivacy(c.CommentID, Number(c.Private))}>
+                      {Number(c.Private) ? 'Make Public' : 'Make Private'}
                     </button>
                     <button className="btn" style={{ fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#ff3860', color: 'white' }} onClick={() => deleteComment(c.CommentID)}>Delete</button>
                   </td>
@@ -544,7 +544,7 @@ function ModeratorPage() {
                 <option value="Available">Available</option>
                 <option value="Under Review (Plagiarism)">Under Review (Plagiarism)</option>
                 <option value="Removed">Removed</option>
-                <option value="Deleted (Author)">Deleted (Author)</option>
+                <option value="Deleted">Deleted</option>
               </select>
             </div>
           </div>
@@ -583,7 +583,9 @@ function ModeratorPage() {
                         <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#ff3860', color: 'white' }} onClick={() => updateItemStatus(item.ItemID, 'Removed')}>Decline</button>
                       </>
                     )}
-                    <button className="btn" style={{ fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#ff3860', color: 'white' }} onClick={() => deleteItem(item.ItemID)}>Delete</button>
+                    {(!['Deleted','Removed'].includes(item.Status)) ? (
+                      <button className="btn" style={{ fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#ff3860', color: 'white' }} onClick={() => deleteItem(item.ItemID)}>Delete</button>
+                    ) : null}
                   </td>
                 </tr>
               ))}
@@ -852,11 +854,12 @@ function ModeratorPage() {
                       <td style={{ padding: 8, border: '1px solid #ddd' }}>{cm.Name}</td>
                       <td style={{ padding: 8, border: '1px solid #ddd' }}>{cm.Username}</td>
                       <td style={{ padding: 8, border: '1px solid #ddd' }}>{cm.PrimaryEmail}</td>
-                      <td style={{ padding: 8, border: '1px solid #ddd' }}>{cm.Approved ? 'Approved' : 'Pending'}</td>
+                      <td style={{ padding: 8, border: '1px solid #ddd' }}>{Number(cm.Approved) ? 'Approved' : 'Pending'}</td>
                       <td style={{ padding: 8, border: '1px solid #ddd' }}>
-                        {!cm.Approved ? (
+                        {!Number(cm.Approved) && (
                           <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#23d160', color: 'white' }} onClick={() => approveCommitteeMember(cm.MemberCommitteeID, true)}>Approve</button>
-                        ) : (
+                        )}
+                        {!!Number(cm.Approved) && (
                           <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#ffdd57' }} onClick={() => approveCommitteeMember(cm.MemberCommitteeID, false)}>Unapprove</button>
                         )}
                         <button className="btn" style={{ fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#ff3860', color: 'white' }} onClick={() => removeCommitteeMember(cm.MemberCommitteeID)}>Remove</button>
@@ -914,11 +917,11 @@ function ModeratorPage() {
                 <tr key={ch.ChildrenCharityID}>
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>{ch.ChildrenCharityID}</td>
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>{ch.Name}</td>
-                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{ch.Approved ? 'Yes' : 'No'}</td>
+                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{Number(ch.Approved) ? 'Yes' : 'No'}</td>
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>{ch.SuggestedByUsername || (ch.SuggestedBy ? `User ${ch.SuggestedBy}` : '-')}</td>
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>
                     <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px' }} onClick={() => toggleCharityApproval(ch.ChildrenCharityID, ch.Approved)}>
-                      {ch.Approved ? 'Unapprove' : 'Approve'}
+                      {Number(ch.Approved) ? 'Unapprove' : 'Approve'}
                     </button>
                     <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px' }} onClick={() => openCharityForm(ch)}>Edit</button>
                     <button className="btn" style={{ fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#ff3860', color: 'white' }} onClick={() => deleteCharity(ch.ChildrenCharityID)}>Delete</button>

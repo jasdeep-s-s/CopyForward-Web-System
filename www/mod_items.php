@@ -102,11 +102,14 @@ if ($method === 'PUT') {
     $values = [];
     
     if ($status !== null) {
-        $validStatuses = ['Under Review (Upload)', 'Available', 'Under Review (Plagiarism)', 'Removed', 'Deleted (Author)'];
+        $validStatuses = ['Under Review (Upload)', 'Available', 'Under Review (Plagiarism)', 'Removed', 'Deleted'];
         if (!in_array($status, $validStatuses)) {
             http_response_code(400);
             echo json_encode(['success' => false, 'error' => 'Invalid status']);
             exit;
+        }
+        if ($status === 'Removed') {
+            $status = 'Deleted';
         }
         $updates[] = "Status = ?";
         $types .= 's';
@@ -172,15 +175,14 @@ if ($method === 'DELETE') {
         exit;
     }
     
-    // Delete related records first (foreign key constraints)
-    $mysqli->query("DELETE FROM Comment WHERE ItemID = $itemId");
-    $mysqli->query("DELETE FROM Download WHERE ItemID = $itemId");
-    $mysqli->query("DELETE FROM Donation WHERE ItemID = $itemId");
-    $mysqli->query("DELETE FROM Discussion WHERE ItemID = $itemId");
-    
-    $stmt = $mysqli->prepare("DELETE FROM Item WHERE ItemID = ?");
+    $stmt = $mysqli->prepare("UPDATE Item SET Status = 'Deleted', UpdatedAt = NOW() WHERE ItemID = ?");
+    if (!$stmt) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => $mysqli->error]);
+        exit;
+    }
     $stmt->bind_param('i', $itemId);
-    
+
     if ($stmt->execute()) {
         echo json_encode(['success' => true]);
     } else {

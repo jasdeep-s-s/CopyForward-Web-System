@@ -60,6 +60,24 @@ while ($r = $res->fetch_assoc()) {
 $stmt->close();
 
 $viewer = isset($_GET['viewer']) ? intval($_GET['viewer']) : 0;
+$itemAuthorMemberId = 0;
+$authorStmt = $mysqli->prepare(
+    "SELECT m.MemberID AS AuthorMemberID 
+    FROM Item i 
+    LEFT JOIN Member m ON i.AuthorID = m.ORCID 
+    WHERE i.ItemID = ? 
+    LIMIT 1
+");
+if ($authorStmt) {
+    $authorStmt->bind_param('i', $item);
+    if ($authorStmt->execute()) {
+        $aRes = $authorStmt->get_result();
+        if ($ar = $aRes->fetch_assoc()) {
+            $itemAuthorMemberId = isset($ar['AuthorMemberID']) ? intval($ar['AuthorMemberID']) : 0;
+        }
+    }
+    $authorStmt->close();
+}
 
 if ($viewer > 0) {
     $commentorMap = [];
@@ -75,6 +93,10 @@ if ($viewer > 0) {
         }
         
         if ($viewer === $r['CommentorID']) {
+            $filtered[] = $r;
+            continue;
+        }
+        if ($itemAuthorMemberId > 0 && $viewer === $itemAuthorMemberId) {
             $filtered[] = $r;
             continue;
         }
