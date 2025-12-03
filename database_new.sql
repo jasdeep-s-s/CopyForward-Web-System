@@ -1,5 +1,6 @@
 -- database.sql for FINAL revised schema from 11/14/2025
 -- MySQL 8.0.22 compatible | UTF8MB4 | ENGINE=InnoDB
+-- By Elhadji Moussa Diongue
 
 CREATE TABLE Address (
   AddressID INT PRIMARY KEY AUTO_INCREMENT,
