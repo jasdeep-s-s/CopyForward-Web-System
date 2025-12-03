@@ -1,6 +1,7 @@
 <?php
 // Moderator MFA Matrix Management API
 // by Jasdeep S. Sandhu, 40266557
+// and Tudor Cosmin Suciu 40179863
 
 session_start();
 header('Content-Type: application/json');
