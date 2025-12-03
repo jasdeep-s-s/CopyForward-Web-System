@@ -395,7 +395,7 @@ function CommitteesPage() {
                              disc.Status === 'Dismissed' ? 'gray' : 
                              disc.Status === 'Closed' ? 'blue' : 'green' 
                     }}>{disc.Status}</span>
-                    {disc.VoteActive && <span style={{ marginLeft: 12, color: 'green', fontWeight: 'bold' }}>🗳 Voting Active</span>}
+                    {disc.VoteActive ? <span style={{ marginLeft: 12, color: 'green', fontWeight: 'bold' }}>🗳 Voting Active</span> : null}
                   </div>
                 </div>
               ))}
