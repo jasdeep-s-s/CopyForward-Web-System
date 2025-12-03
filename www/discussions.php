@@ -38,7 +38,7 @@ try {
 
     $stmt = $mysqli->prepare($sql);
     if (!$stmt) throw new Exception($mysqli->error);
-    $stmt->bind_param('iiiii', $itemId, $memberId, $memberId, $itemId, $memberId);
+    $stmt->bind_param('iiiiii', $itemId, $memberId, $memberId, $itemId, $memberId, $memberId);
     if (!$stmt->execute()) throw new Exception($stmt->error ?: $mysqli->error);
     $res = $stmt->get_result();
 

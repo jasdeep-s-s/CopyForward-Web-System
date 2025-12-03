@@ -16,6 +16,8 @@ function ModeratorPage() {
   // Items state
   const [items, setItems] = useState([])
   const [itemStatusFilter, setItemStatusFilter] = useState('')
+  const [viewingItem, setViewingItem] = useState(null)
+  const [itemDetails, setItemDetails] = useState(null)
   
   // Members state
   const [members, setMembers] = useState([])
@@ -129,7 +131,7 @@ function ModeratorPage() {
   }
 
   async function deleteItem(itemId) {
-    if (!confirm('Delete this item? This will also delete related comments, downloads, and donations.')) return
+    if (!confirm('Delete this item? This will mark the item as deleted and will not be considered in the statistics.')) return
     try {
       const res = await requestWithOverride('/mod_items.php', 'DELETE', { itemId })
       if (!res.ok) throw new Error('Failed to delete item')
@@ -138,6 +140,24 @@ function ModeratorPage() {
     } catch (e) {
       setError(e.message)
     }
+  }
+
+  async function viewItemDetails(itemId) {
+    setError('')
+    try {
+      const res = await fetch(`/item_details.php?id=${itemId}`)
+      if (!res.ok) throw new Error('Failed to load item details')
+      const data = await res.json()
+      setItemDetails(data)
+      setViewingItem(itemId)
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
+  function closeItemDetails() {
+    setViewingItem(null)
+    setItemDetails(null)
   }
 
   // Members functions
@@ -283,7 +303,7 @@ function ModeratorPage() {
 
   async function toggleCharityApproval(charityId, currentApproved) {
     try {
-      const res = await requestWithOverride('/mod_charities.php', 'PUT', { charityId, approved: currentApproved ? 0 : 1 })
+      const res = await requestWithOverride('/mod_charities.php', 'PUT', { charityId, approved: Number(currentApproved) ? 0 : 1 })
       if (!res.ok) throw new Error('Failed to update charity')
       setSuccess('Charity updated')
       loadCharities()
@@ -329,7 +349,7 @@ function ModeratorPage() {
     setEditingCharity(charity)
     setCharityFormData(charity ? {
       name: charity.Name,
-      approved: charity.Approved ? 1 : 0
+      approved: Number(charity.Approved) ? 1 : 0
     } : { approved: 0 })
     setShowCharityForm(true)
     setError('')
@@ -496,10 +516,10 @@ function ModeratorPage() {
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>{c.CommentorUsername || c.CommentorID}</td>
                   <td style={{ padding: 8, border: '1px solid #ddd', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.Comment}</td>
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>{c.Date ? new Date(c.Date).toLocaleDateString() : ''}</td>
-                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{c.Private ? 'No' : 'Yes'}</td>
+                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{Number(c.Private) ? 'Yes' : 'No'}</td>
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>
-                    <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px' }} onClick={() => toggleCommentPrivacy(c.CommentID, c.Private)}>
-                      {c.Private ? 'Make Public' : 'Make Private'}
+                    <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px' }} onClick={() => toggleCommentPrivacy(c.CommentID, Number(c.Private))}>
+                      {Number(c.Private) ? 'Make Public' : 'Make Private'}
                     </button>
                     <button className="btn" style={{ fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#ff3860', color: 'white' }} onClick={() => deleteComment(c.CommentID)}>Delete</button>
                   </td>
@@ -524,7 +544,7 @@ function ModeratorPage() {
                 <option value="Available">Available</option>
                 <option value="Under Review (Plagiarism)">Under Review (Plagiarism)</option>
                 <option value="Removed">Removed</option>
-                <option value="Deleted (Author)">Deleted (Author)</option>
+                <option value="Deleted">Deleted</option>
               </select>
             </div>
           </div>
@@ -550,19 +570,118 @@ function ModeratorPage() {
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>{item.Status}</td>
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>{item.UploadDate ? new Date(item.UploadDate).toLocaleDateString() : ''}</td>
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>
+                    <button 
+                      className="btn" 
+                      style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px' }} 
+                      onClick={() => viewItemDetails(item.ItemID)}
+                    >
+                      View Details
+                    </button>
                     {item.Status === 'Under Review (Upload)' && (
                       <>
                         <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#23d160', color: 'white' }} onClick={() => updateItemStatus(item.ItemID, 'Available')}>Approve</button>
                         <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#ff3860', color: 'white' }} onClick={() => updateItemStatus(item.ItemID, 'Removed')}>Decline</button>
                       </>
                     )}
-                    <button className="btn" style={{ fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#ff3860', color: 'white' }} onClick={() => deleteItem(item.ItemID)}>Delete</button>
+                    {(!['Deleted','Removed'].includes(item.Status)) ? (
+                      <button className="btn" style={{ fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#ff3860', color: 'white' }} onClick={() => deleteItem(item.ItemID)}>Delete</button>
+                    ) : null}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
           {items.length === 0 && <div style={{ marginTop: 12 }}>No items found</div>}
+          
+          {/* Item Details Modal */}
+          {viewingItem && itemDetails && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 1000
+            }}>
+              <div style={{
+                backgroundColor: 'white',
+                padding: 24,
+                borderRadius: 8,
+                maxWidth: '800px',
+                maxHeight: '90vh',
+                overflow: 'auto',
+                width: '90%'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <h2 style={{ margin: 0 }}>{itemDetails.Title}</h2>
+                  <button 
+                    className="btn" 
+                    onClick={closeItemDetails}
+                    style={{ fontSize: '1.2rem', padding: '4px 12px' }}
+                  >
+                    ×
+                  </button>
+                </div>
+                
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ marginBottom: 8 }}><strong>Author:</strong> {itemDetails.AuthorName || itemDetails.AuthorID}</div>
+                  <div style={{ marginBottom: 8 }}><strong>Type:</strong> {itemDetails.Type}</div>
+                  <div style={{ marginBottom: 8 }}><strong>Status:</strong> {itemDetails.Status}</div>
+                  <div style={{ marginBottom: 8 }}><strong>Upload Date:</strong> {itemDetails.UploadDate ? new Date(itemDetails.UploadDate).toLocaleDateString() + ' ' + new Date(itemDetails.UploadDate).toLocaleTimeString() : ''}</div>
+                  {itemDetails.PublicationDate && <div style={{ marginBottom: 8 }}><strong>Publication Date:</strong> {new Date(itemDetails.PublicationDate).toLocaleDateString()}</div>}
+                  {itemDetails.DOI && <div style={{ marginBottom: 8 }}><strong>DOI:</strong> {itemDetails.DOI}</div>}
+                  {itemDetails.Volume && <div style={{ marginBottom: 8 }}><strong>Volume:</strong> {itemDetails.Volume}</div>}
+                  {itemDetails.Issue && <div style={{ marginBottom: 8 }}><strong>Issue:</strong> {itemDetails.Issue}</div>}
+                  {itemDetails.PageStart && itemDetails.PageEnd && (
+                    <div style={{ marginBottom: 8 }}><strong>Pages:</strong> {itemDetails.PageStart}-{itemDetails.PageEnd}</div>
+                  )}
+                </div>
+                
+                <div style={{ marginBottom: 16 }}>
+                  <h3>Content:</h3>
+                  <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{itemDetails.Content || 'No content provided'}</p>
+                </div>
+                
+                {itemDetails.FilePath && (
+                  <div style={{ marginBottom: 16 }}>
+                    <strong>File:</strong> <a href={itemDetails.FilePath} target="_blank" rel="noopener noreferrer" style={{ color: '#3273dc' }}>Download PDF</a>
+                  </div>
+                )}
+                
+                <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #ddd', display: 'flex', gap: 8 }}>
+                  {itemDetails.Status === 'Under Review (Upload)' && (
+                    <>
+                      <button 
+                        className="btn" 
+                        style={{ backgroundColor: '#23d160', color: 'white' }} 
+                        onClick={() => {
+                          updateItemStatus(itemDetails.ItemID, 'Available')
+                          closeItemDetails()
+                        }}
+                      >
+                        Approve
+                      </button>
+                      <button 
+                        className="btn" 
+                        style={{ backgroundColor: '#ff3860', color: 'white' }} 
+                        onClick={() => {
+                          updateItemStatus(itemDetails.ItemID, 'Removed')
+                          closeItemDetails()
+                        }}
+                      >
+                        Decline
+                      </button>
+                    </>
+                  )}
+                  <button className="btn" onClick={closeItemDetails}>Close</button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -735,12 +854,12 @@ function ModeratorPage() {
                       <td style={{ padding: 8, border: '1px solid #ddd' }}>{cm.Name}</td>
                       <td style={{ padding: 8, border: '1px solid #ddd' }}>{cm.Username}</td>
                       <td style={{ padding: 8, border: '1px solid #ddd' }}>{cm.PrimaryEmail}</td>
-                      <td style={{ padding: 8, border: '1px solid #ddd' }}>{cm.Approved ? 'Approved' : 'Pending'}</td>
+                      <td style={{ padding: 8, border: '1px solid #ddd' }}>{Number(cm.Approved) ? 'Approved' : 'Pending'}</td>
                       <td style={{ padding: 8, border: '1px solid #ddd' }}>
-                        {!cm.Approved && (
+                        {!Number(cm.Approved) && (
                           <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#23d160', color: 'white' }} onClick={() => approveCommitteeMember(cm.MemberCommitteeID, true)}>Approve</button>
                         )}
-                        {cm.Approved && (
+                        {!!Number(cm.Approved) && (
                           <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#ffdd57' }} onClick={() => approveCommitteeMember(cm.MemberCommitteeID, false)}>Unapprove</button>
                         )}
                         <button className="btn" style={{ fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#ff3860', color: 'white' }} onClick={() => removeCommitteeMember(cm.MemberCommitteeID)}>Remove</button>
@@ -798,11 +917,11 @@ function ModeratorPage() {
                 <tr key={ch.ChildrenCharityID}>
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>{ch.ChildrenCharityID}</td>
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>{ch.Name}</td>
-                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{ch.Approved ? 'Yes' : 'No'}</td>
+                  <td style={{ padding: 8, border: '1px solid #ddd' }}>{Number(ch.Approved) ? 'Yes' : 'No'}</td>
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>{ch.SuggestedByUsername || (ch.SuggestedBy ? `User ${ch.SuggestedBy}` : '-')}</td>
                   <td style={{ padding: 8, border: '1px solid #ddd' }}>
                     <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px' }} onClick={() => toggleCharityApproval(ch.ChildrenCharityID, ch.Approved)}>
-                      {ch.Approved ? 'Unapprove' : 'Approve'}
+                      {Number(ch.Approved) ? 'Unapprove' : 'Approve'}
                     </button>
                     <button className="btn" style={{ marginRight: 4, fontSize: '0.8rem', padding: '4px 8px' }} onClick={() => openCharityForm(ch)}>Edit</button>
                     <button className="btn" style={{ fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#ff3860', color: 'white' }} onClick={() => deleteCharity(ch.ChildrenCharityID)}>Delete</button>

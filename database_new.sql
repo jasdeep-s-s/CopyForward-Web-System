@@ -1,5 +1,6 @@
 -- database.sql for FINAL revised schema from 11/14/2025
 -- MySQL 8.0.22 compatible | UTF8MB4 | ENGINE=InnoDB
+-- By Elhadji Moussa Diongue
 
 CREATE TABLE Address (
   AddressID INT PRIMARY KEY AUTO_INCREMENT,
@@ -33,7 +34,7 @@ CREATE TABLE Item (
   ApprovedBy INT,
   Topic VARCHAR(256),
   Type ENUM('Thesis','Article','Monograph & Book','Monograph Chapter','Conference Paper','Non-Thesis Graduate Project','Dataset'),
-  Status ENUM('Under Review (Upload)','Available','Under Review (Plagiarism)','Removed', 'Deleted (Author)'),
+  Status ENUM('Under Review (Upload)','Available','Under Review (Plagiarism)','Removed', 'Deleted'),
   ParentTitleID INT,
   Content VARCHAR(5000),
   UpdatedAt DATETIME,

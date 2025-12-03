@@ -17,6 +17,9 @@ function ItemDonation ({ itemId }) {
   const [suggestName, setSuggestName] = useState('')
   const [suggestLoading, setSuggestLoading] = useState(false)
   const [suggestMessage, setSuggestMessage] = useState('')
+  const [cardNumber, setCardNumber] = useState('')
+  const [cardCcv, setCardCcv] = useState('')
+  const [cardExpiry, setCardExpiry] = useState('')
 
   useEffect(() => {
     fetch('/charities.php')
@@ -70,6 +73,23 @@ function ItemDonation ({ itemId }) {
     const sum = Number(authorPercent) + Number(childrenPercent) + Number(cfpPercent)
     if (sum !== 100) { setError('Percentages must add up to 100'); return false }
     if (Number(childrenPercent) < 60) { setError('Children charity percent must be at least 60'); return false }
+
+    const cardNumClean = (cardNumber || '').replace(/\s+/g, '')
+    if (!/^\d{13,19}$/.test(cardNumClean)) { setError('Enter a valid card number (13-19 digits)'); return false }
+    if (!/^\d{3,4}$/.test(cardCcv || '')) { setError('Enter a valid CCV (3 or 4 digits)'); return false }
+    
+    const exp = (cardExpiry || '').trim()
+    let m = null, y = null
+    const mmYY = /^([0-1]?\d)\/(\d{2})$/.exec(exp)
+    const mmYYYY = /^([0-1]?\d)\/(\d{4})$/.exec(exp)
+    if (mmYYYY) { m = parseInt(mmYYYY[1],10); y = parseInt(mmYYYY[2],10) }
+    else if (mmYY) { m = parseInt(mmYY[1],10); y = 2000 + parseInt(mmYY[2],10) }
+    else { setError('Expiry date must be MM/YY or MM/YYYY'); return false }
+    if (m < 1 || m > 12) { setError('Expiry month must be between 01 and 12'); return false }
+    const now = new Date()
+    
+    const lastOfMonth = new Date(y, m, 0)
+    if (lastOfMonth < new Date(now.getFullYear(), now.getMonth(), 1)) { setError('Card expiry must not be in the past'); return false }
     return true
   }
 
@@ -78,17 +98,38 @@ function ItemDonation ({ itemId }) {
     if (!validate()) return
     const logged = localStorage.getItem('logged_in_id')
     if (!logged) { setError('You must be signed in to donate'); return }
+    
+    const cardNumClean = (cardNumber || '').replace(/\s+/g, '')
+    const cardLast4 = cardNumClean.slice(-4)
+    
+    let m = null, y = null
+    const mmYY = /^([0-1]?\d)\/(\d{2})$/.exec((cardExpiry||'').trim())
+    const mmYYYY = /^([0-1]?\d)\/(\d{4})$/.exec((cardExpiry||'').trim())
+    if (mmYYYY) { m = parseInt(mmYYYY[1],10); y = parseInt(mmYYYY[2],10) }
+    else if (mmYY) { m = parseInt(mmYY[1],10); y = 2000 + parseInt(mmYY[2],10) }
+
     setLoading(true)
     fetch('/post_donation.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ donatorId: parseInt(logged,10), itemId: parseInt(itemId,10), childrenCharityId: parseInt(selected,10), amount: parseInt(amount,10), authorPercent: parseInt(authorPercent,10), childrenPercent: parseInt(childrenPercent,10), cfpPercent: parseInt(cfpPercent,10) })
+      body: JSON.stringify({
+        donatorId: parseInt(logged,10),
+        itemId: parseInt(itemId,10),
+        childrenCharityId: parseInt(selected,10),
+        amount: parseInt(amount,10),
+        authorPercent: parseInt(authorPercent,10),
+        childrenPercent: parseInt(childrenPercent,10),
+        cfpPercent: parseInt(cfpPercent,10),
+        cardLast4: cardLast4,
+        cardExpiryMonth: m,
+        cardExpiryYear: y
+      })
     })
     .then(r => r.json())
     .then(d => {
       setLoading(false)
       if (d && d.success) {
-        alert('Donation recorded. Thank you!')
+        alert('Payment Processed. Donation recorded. Thank you!')
         window.location.hash = `#/items/${itemId}`
       } else {
         setError(d && d.error ? d.error : 'Failed to record donation')
@@ -143,6 +184,21 @@ function ItemDonation ({ itemId }) {
         <div style={{ marginBottom: 8 }}>
           <label style={{ display: 'block' }}><strong>CFP %</strong></label>
           <input type="number" min="0" max="100" value={cfpPercent} onChange={e => setCfpPercent(e.target.value)} />
+        </div>
+
+        
+        
+        <div style={{ marginBottom: 8 }}>
+          <label style={{ display: 'block' }}><strong>Card Number</strong></label>
+          <input type="text" placeholder="1234 5678 9012 3456" value={cardNumber} onChange={e => setCardNumber(e.target.value)} />
+        </div>
+        <div style={{ marginBottom: 8 }}>
+          <label style={{ display: 'block' }}><strong>CCV</strong></label>
+          <input type="text" placeholder="123" value={cardCcv} onChange={e => setCardCcv(e.target.value)} />
+        </div>
+        <div style={{ marginBottom: 8 }}>
+          <label style={{ display: 'block' }}><strong>Expiry (MM/YY or MM/YYYY)</strong></label>
+          <input type="text" placeholder="MM/YY" value={cardExpiry} onChange={e => setCardExpiry(e.target.value)} />
         </div>
 
         {error ? <div style={{ color: 'darkred', marginBottom: 8 }}>{error}</div> : null}
