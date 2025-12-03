@@ -28,21 +28,21 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- 1. ADDRESS (15 rows, ASCII-only)
 -- ----------------------------------------------------------
 INSERT INTO Address (StreetNumber, StreetName, City, Country) VALUES
-(123, 'Crescent Street',           'Montreal', 'Canada'),  -- 1
-(44,  'Sherbrooke Street',         'Montreal', 'Canada'),  -- 2
-(90,  'Bishop Street',             'Toronto',  'Canada'),  -- 3
-(12,  'King Street',               'Toronto',  'Canada'),  -- 4
-(77,  'Queen Mary Road',           'Montreal', 'Canada'),  -- 5
-(15,  'Peel Street',               'Montreal', 'Canada'),  -- 6
-(101, 'College Street',            'Toronto',  'Canada'),  -- 7
-(250, 'Granville Street',          'Vancouver','Canada'),  -- 8
-(88,  'Saint Laurent Boulevard',   'Montreal', 'Canada'),  -- 9
-(60,  'De Maisonneuve Boulevard',  'Montreal', 'Canada'),  -- 10
-(300, 'Bloor Street',              'Toronto',  'Canada'),  -- 11
-(1,   'Place Ville-Marie',         'Montreal', 'Canada'),  -- 12
-(55,  'Avenida Libertador',        'Santiago', 'Chile'),   -- 13
-(18,  'Adeola Odeku Street',       'Lagos',    'Nigeria'), -- 14
-(200, 'Yonge Street',              'Toronto',  'Canada');  -- 15
+(123, 'Crescent Street', 'Montreal', 'Canada'),  -- 1
+(44,  'Sherbrooke Street','Montreal', 'Canada'),  -- 2
+(90,  'Bishop Street','Toronto',  'Canada'),  -- 3
+(12,  'King Street', 'Toronto',  'Canada'),  -- 4
+(77,  'Queen Mary Road', 'Montreal', 'Canada'),  -- 5
+(15,  'Peel Street', 'Montreal', 'Canada'),  -- 6
+(101, 'College Street', 'Toronto',  'Canada'),  -- 7
+(250, 'Granville Street', 'Vancouver','Canada'),  -- 8
+(88,  'Saint Laurent Boulevard', 'Montreal', 'Canada'),  -- 9
+(60,  'De Maisonneuve Boulevard', 'Montreal', 'Canada'),  -- 10
+(300, 'Bloor Street', 'Toronto',  'Canada'),  -- 11
+(1,   'Place Ville-Marie', 'Montreal', 'Canada'),  -- 12
+(55,  'Avenida Libertador', 'Santiago', 'Chile'),   -- 13
+(18,  'Adeola Odeku Street', 'Lagos',    'Nigeria'), -- 14
+(200, 'Yonge Street', 'Toronto',  'Canada');  -- 15
 
 
 -- ----------------------------------------------------------
@@ -52,77 +52,77 @@ INSERT INTO Member
 (Role, Name, Username, Organization, AddressID,
  PrimaryEmail, RecoveryEmail, Password, ORCID, Blacklisted)
 VALUES
-('Author',   'Alice Author',        'aliceA',   'Concordia University', 1,
- 'alice@example.com',  'alice.recovery@example.com',
+('Author','Alice Author', 'aliceA','Concordia University', 1,
+ 'alice@example.com','alice.recovery@example.com',
  '$2y$12$yJ1gi2ylq2Peng7pdegvyeSr8B1xqUVonfGBr/6aXEQhgWShQH9fG',
  '0000-0000-0000-0001', FALSE),
 
-('Author',   'Bob Brown',           'bobB',     'McGill University',    2,
- 'bob@example.com',   'bob.recovery@example.com',
+('Author','Bob Brown','bobB','McGill University',2,
+ 'bob@example.com','bob.recovery@example.com',
  '$2y$12$yJ1gi2ylq2Peng7pdegvyeSr8B1xqUVonfGBr/6aXEQhgWShQH9fG',
- '0000-0000-0000-0002', FALSE),
+ '0000-0000-0000-0002',FALSE),
 
-('Regular',  'Carol Clark',         'carolC',   'Independent',          3,
+('Regular','Carol Clark', 'carolC', 'Independent',3,
  'carol@example.com', 'carol.recovery@example.com',
  '$2y$12$yJ1gi2ylq2Peng7pdegvyeSr8B1xqUVonfGBr/6aXEQhgWShQH9fG',
  NULL, FALSE),
 
-('Moderator','Mike Moderator',      'mikeM',    'CFP Staff',            4,
- 'mike@example.com',  'mike.recovery@example.com',
+('Moderator','Mike Moderator', 'mikeM', 'CFP Staff', 4,
+ 'mike@example.com', 'mike.recovery@example.com',
  '$2y$12$yJ1gi2ylq2Peng7pdegvyeSr8B1xqUVonfGBr/6aXEQhgWShQH9fG',
  NULL, FALSE),
 
-('Author',   'Dana Doe',            'danaD',    'UdeM',                 5,
+('Author', 'Dana Doe', 'danaD','UdeM',5,
  'dana@example.com',  'dana.recovery@example.com',
  '$2y$12$yJ1gi2ylq2Peng7pdegvyeSr8B1xqUVonfGBr/6aXEQhgWShQH9fG',
  '0000-0000-0000-0003', FALSE),
 
-('Regular',  'Eric Evans',          'ericE',    'Student',              6,
+('Regular', 'Eric Evans', 'ericE', 'Student', 6,
  'eric@example.com',  'eric.recovery@example.com',
  '$2y$12$yJ1gi2ylq2Peng7pdegvyeSr8B1xqUVonfGBr/6aXEQhgWShQH9fG',
  NULL, FALSE),
 
-('Author',   'Fatima Khan',         'fatimaK',  'University of Toronto',7,
+('Author',   'Fatima Khan', 'fatimaK',  'University of Toronto',7,
  'fatima@example.com','fatima.recovery@example.com',
  '$2y$12$yJ1gi2ylq2Peng7pdegvyeSr8B1xqUVonfGBr/6aXEQhgWShQH9fG',
  '0000-0000-0000-0004', FALSE),
 
-('Author',   'George Li',           'georgeL',  'UBC',                  8,
+('Author', 'George Li', 'georgeL',  'UBC', 8,
  'george@example.com','george.recovery@example.com',
  '$2y$12$yJ1gi2ylq2Peng7pdegvyeSr8B1xqUVonfGBr/6aXEQhgWShQH9fG',
  '0000-0000-0000-0005', FALSE),
 
-('Regular',  'Hannah Lee',          'hannahL',  'Student',              9,
+('Regular',  'Hannah Lee','hannahL',  'Student', 9,
  'hannah@example.com','hannah.recovery@example.com',
  '$2y$12$yJ1gi2ylq2Peng7pdegvyeSr8B1xqUVonfGBr/6aXEQhgWShQH9fG',
  NULL, FALSE),
 
-('Author',   'Ivan Petrov',         'ivanP',    'Polytechnique',        10,
+('Author', 'Ivan Petrov', 'ivanP', 'Polytechnique', 10,
  'ivan@example.com',  'ivan.recovery@example.com',
  '$2y$12$yJ1gi2ylq2Peng7pdegvyeSr8B1xqUVonfGBr/6aXEQhgWShQH9fG',
  '0000-0000-0000-0006', FALSE),
 
-('Regular',  'Julia Smith',         'juliaS',   'Independent',          11,
+('Regular', 'Julia Smith','juliaS','Independent', 11,
  'julia@example.com', 'julia.recovery@example.com',
  '$2y$12$yJ1gi2ylq2Peng7pdegvyeSr8B1xqUVonfGBr/6aXEQhgWShQH9fG',
  NULL, FALSE),
 
-('Moderator','Karen Admin',         'karenA',   'CFP Staff',            12,
+('Moderator','Karen Admin','karenA',   'CFP Staff', 12,
  'karen@example.com','karen.recovery@example.com',
  '$2y$12$yJ1gi2ylq2Peng7pdegvyeSr8B1xqUVonfGBr/6aXEQhgWShQH9fG',
  NULL, FALSE),
 
-('Author',   'Luis Fernandez',      'luisF',    'Universidad de Chile', 13,
+('Author', 'Luis Fernandez', 'luisF', 'Universidad de Chile', 13,
  'luis@example.com','luis.recovery@example.com',
  '$2y$12$yJ1gi2ylq2Peng7pdegvyeSr8B1xqUVonfGBr/6aXEQhgWShQH9fG',
  '0000-0000-0000-0007', FALSE),
 
-('Author',   'Mina Okafor',         'minaO',    'University of Lagos',  14,
+('Author',   'Mina Okafor','minaO', 'University of Lagos', 14,
  'mina@example.com','mina.recovery@example.com',
  '$2y$12$yJ1gi2ylq2Peng7pdegvyeSr8B1xqUVonfGBr/6aXEQhgWShQH9fG',
  '0000-0000-0000-0008', FALSE),
 
-('Regular',  'Noah Johnson',        'noahJ',    'Student',              15,
+('Regular',  'Noah Johnson','noahJ', 'Student', 15,
  'noah@example.com','noah.recovery@example.com',
  '$2y$12$yJ1gi2ylq2Peng7pdegvyeSr8B1xqUVonfGBr/6aXEQhgWShQH9fG',
  NULL, FALSE);
@@ -275,7 +275,7 @@ INSERT INTO Download (ItemID, DownloaderID, Date) VALUES
 -- ----------------------------------------------------------
 INSERT INTO ChildrenCharity (Name, Approved, SuggestedBy) VALUES
 ('Save the Children', TRUE,  NULL),
-('UNICEF',            TRUE,  NULL),
+('UNICEF',   TRUE,  NULL),
 ('Kids Future Fund',  FALSE, 3);
 
 
